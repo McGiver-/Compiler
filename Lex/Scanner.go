@@ -21,31 +21,36 @@ type LScanner struct {
 	reserved map[string]string
 }
 
+// Reserved words with lexemes as their keys and types as their values
+// The types must be atocc compatible
+// Order matters. Put the longer one first i.e '==' '='
+var reserved = map[string]string{
+	"==": "eq", "=": "assign", "+": "plus",
+	"-": "minus", "*/": "star/", "*": "star",
+	"<>": "neq", "<=": "leq", "<": "lt",
+	">=": "geq", ">": "gt", "(": "openParen",
+	")": "closeParen", "{": "openCurly", "}": "closeCurly",
+	"[": "openSquare", "]": "closeSquare", "::": "sr",
+	":": "cln", "else": "else", "then": "then",
+	"//": "//", "/*": "/star", "/": "div",
+	"for": "for", "if": "if", "class": "class",
+	"and": "and", "int": "int", ";": ";",
+	"not": "not", "float": "float", ",": ",",
+	"or": "or", "get": "get", ".": ".",
+	"put": "put", "return": "return", "program": "program",
+}
+
+// Create Scanner by passing the file to be scanned and return a pointer to LScanner
 func CreateScanner(fileName string) (*LScanner, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		return nil, err
 	}
-	reserved := map[string]string{
-		"==": "==", "=": "assign", "+": "plus",
-		"-": "minus", "*/": "star/", "*": "star",
-		"<>": "<>", "<=": "<=", "<": "lt",
-		">=": ">=", ">": "gt", "(": "openParen",
-		")": "closeParen", "{": "openCurly", "}": "closeCurly",
-		"[": "openSquare", "]": "closeSquare", "::": "::",
-		":": "cln", "else": "else", "then": "then",
-		"//": "//", "/*": "/star", "/": "div",
-		"for": "for", "if": "if", "class": "class",
-		"and": "and", "int": "int", ";": ";",
-		"not": "not", "float": "float", ",": ",",
-		"or": "or", "get": "get", ".": ".",
-		"put": "put", "return": "return", "program": "program",
-	}
-
 	reader := bufio.NewReader(file)
 	return &LScanner{reader, 0, 0, reserved}, nil
 }
 
+// Check if identifier and return length if so.
 func (ls *LScanner) id() int {
 	i := 1
 	for {
@@ -60,6 +65,7 @@ func (ls *LScanner) id() int {
 	}
 }
 
+// Check if reserved
 func (ls *LScanner) isReserved() bool {
 	for i := 7; i > 0; i-- {
 		chars, err := ls.reader.Peek(i)
@@ -74,10 +80,11 @@ func (ls *LScanner) isReserved() bool {
 	return false
 }
 
+// Returns the reserved words Type
 func (ls *LScanner) getReserved() (string, string) {
+	chars, _ := ls.reader.Peek(7)
 	for i := 7; i > 0; i-- {
-		chars, _ := ls.reader.Peek(i)
-		s, ok := ls.reserved[string(chars)]
+		s, ok := ls.reserved[string(chars[:i])]
 		if ok {
 			ls.read(string(chars))
 			return s, string(chars)
@@ -102,7 +109,7 @@ func (ls *LScanner) integer() int {
 
 func (ls *LScanner) isletter() bool {
 	b, _ := ls.reader.Peek(1)
-	return (b[0] >= 97 && b[0] <= 122) || (b[0] >= 65 && b[0] <= 90)
+	return isLetter(b[0])
 }
 
 func isLetter(b byte) bool {
@@ -111,7 +118,7 @@ func isLetter(b byte) bool {
 
 func (ls *LScanner) isAlphanum() bool {
 	b, _ := ls.reader.Peek(1)
-	return ls.isletter() || ls.isDigit() || b[0] == 95
+	return isAlphanum(b[0])
 }
 
 func isAlphanum(b byte) bool {
@@ -120,7 +127,7 @@ func isAlphanum(b byte) bool {
 
 func (ls *LScanner) isDigit() bool {
 	b, _ := ls.reader.Peek(1)
-	return b[0] >= 48 && b[0] <= 57
+	return isDigit(b[0])
 }
 
 func isDigit(b byte) bool {
@@ -209,7 +216,7 @@ func isNonzero(b byte) bool {
 
 func (ls *LScanner) isNonzero() bool {
 	b, _ := ls.reader.Peek(1)
-	return b[0] >= 49 && b[0] <= 57
+	return isNonzero(b[0])
 }
 
 func (ls *LScanner) isEOF() bool {
