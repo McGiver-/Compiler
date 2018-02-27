@@ -9,7 +9,7 @@ import (
 )
 
 type SynAnalyzer struct {
-	tokens           *[]Lex.Token
+	tokens           []*Lex.Token
 	tokenIndex       int
 	attributeGrammar [96]string
 	predictionTable  map[string]map[string]int
@@ -18,10 +18,10 @@ type SynAnalyzer struct {
 }
 
 // CreateAnalyzer creates the Analyzer by passing the token array
-func CreateAnalyzer(tokens []Lex.Token) (*SynAnalyzer, error) {
+func CreateAnalyzer(tokens []*Lex.Token) (*SynAnalyzer, error) {
 
 	return &SynAnalyzer{
-		&tokens,
+		tokens,
 		-1,
 		attributeGrammar,
 		predictionTable,
@@ -30,7 +30,7 @@ func CreateAnalyzer(tokens []Lex.Token) (*SynAnalyzer, error) {
 	}, nil
 }
 
-func (syn *SynAnalyzer) parse() (errorList []error) {
+func (syn *SynAnalyzer) Parse() (errorList []error) {
 	skipping := false
 	pStack := syn.parsingStack // This is the stack that holds the parsing symbols that are pushed.
 	var symbol string          // Symbol variable
@@ -89,6 +89,12 @@ func (syn *SynAnalyzer) parse() (errorList []error) {
 				inverseRhsMultiplePush(pStack, rhsList)
 			}
 		}
+		newPrint := fmt.Sprintf("%v", pStack)
+		newPrint = strings.Replace(newPrint, "<nil>", "", -1)
+		newPrint = strings.Replace(newPrint, "&", "", -1)
+		newPrint = strings.Replace(newPrint, "&", "", -1)
+		newPrint = strings.Replace(newPrint, " ", "", -1)
+		fmt.Printf("STACK : %s\n", newPrint)
 	}
 	return
 }
@@ -99,10 +105,10 @@ func inverseRhsMultiplePush(stack *stackgo.Stack, rhsList []string) {
 	}
 }
 
-func (syn *SynAnalyzer) nextToken() (Lex.Token, error) {
-	tokens := *syn.tokens
+func (syn *SynAnalyzer) nextToken() (*Lex.Token, error) {
+	tokens := syn.tokens
 	if syn.tokenIndex >= len(tokens)-1 {
-		return Lex.Token{}, fmt.Errorf("Reached the end of the program")
+		return nil, fmt.Errorf("Reached the end of the program")
 	}
 	syn.tokenIndex++
 	return tokens[syn.tokenIndex], nil

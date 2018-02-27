@@ -11,7 +11,7 @@ import (
 type Token struct {
 	Type     string
 	Lexeme   string
-	location string
+	Location string
 }
 
 type LScanner struct {
@@ -19,20 +19,21 @@ type LScanner struct {
 	col      int
 	line     int
 	reserved map[string]string
+	position int
 }
 
 // Reserved words with lexemes as their keys and types as their values
 // The types must be atocc compatible
 // Order matters. Put the longer one first i.e '==' '='
 var reserved = map[string]string{
-	"==": "eq", "=": "assign", "+": "plus",
-	"-": "minus", "*/": "star/", "*": "star",
+	"==": "eq", "=": "=", "+": "+",
+	"-": "-", "*/": "*/", "*": "*",
 	"<>": "neq", "<=": "leq", "<": "lt",
-	">=": "geq", ">": "gt", "(": "openParen",
-	")": "closeParen", "{": "openCurly", "}": "closeCurly",
-	"[": "openSquare", "]": "closeSquare", "::": "sr",
-	":": "cln", "else": "else", "then": "then",
-	"//": "//", "/*": "/star", "/": "div",
+	">=": "geq", ">": "gt", "(": "(",
+	")": ")", "{": "{", "}": "}",
+	"[": "[", "]": "]", "::": "sr",
+	":": ":", "else": "else", "then": "then",
+	"//": "//", "/*": "/*", "/": "/",
 	"for": "for", "if": "if", "class": "class",
 	"and": "and", "int": "int", ";": ";",
 	"not": "not", "float": "float", ",": ",",
@@ -47,7 +48,7 @@ func CreateScanner(fileName string) (*LScanner, error) {
 		return nil, err
 	}
 	reader := bufio.NewReader(file)
-	return &LScanner{reader, 0, 0, reserved}, nil
+	return &LScanner{reader, 0, 1, reserved, 0}, nil
 }
 
 // Check if identifier and return length if so.
@@ -86,8 +87,8 @@ func (ls *LScanner) getReserved() (string, string) {
 	for i := 7; i > 0; i-- {
 		s, ok := ls.reserved[string(chars[:i])]
 		if ok {
-			ls.read(string(chars))
-			return s, string(chars)
+			ls.read(string(chars[:i]))
+			return s, string(chars[:i])
 		}
 	}
 	return "", ""
@@ -254,6 +255,7 @@ func (ls *LScanner) readN(i int) string {
 
 func (ls *LScanner) token(t, l string, line, col int) *Token {
 	ls.col += len(l)
+	fmt.Printf("token: %s\n", l)
 	return &Token{t, l, fmt.Sprintf("%d %d", line, col)}
 }
 
@@ -265,7 +267,7 @@ func (ls *LScanner) NextToken() (*Token, error) {
 		ls.read(" ")
 		ls.col++
 		return nil, nil
-	case ls.isNext(10): // space
+	case ls.isNext(10): // new line
 		ls.read(" ")
 		ls.line++
 		ls.col = 0
@@ -274,28 +276,31 @@ func (ls *LScanner) NextToken() (*Token, error) {
 		n := ls.integer()
 		l, t := ls.isFraction(n)
 		if !t {
-			return ls.token("integer", ls.readN(n), ls.line, ls.col), nil
+			return ls.token("intNum", ls.readN(n), ls.line, ls.col), nil
 		}
-		return ls.token("float", ls.readN(l), ls.line, ls.col), nil
+		return ls.token("floatNum", ls.readN(l), ls.line, ls.col), nil
 	case ls.isIdent("0"):
 		n, t := ls.isFraction(1)
 		if !t {
-			return ls.token("integer", ls.read("0"), ls.line, ls.col), nil
+			return ls.token("intNum", ls.read("0"), ls.line, ls.col), nil
 		}
-		return ls.token("float", ls.readN(n), ls.line, ls.col), nil
+		return ls.token("floatNum", ls.readN(n), ls.line, ls.col), nil
 		// ----------------------------- Reserved Words ------------------------------------------------
 	case ls.isIdent("_"):
 		ls.read("_")
 		return ls.token("_", "_", ls.line, ls.col), fmt.Errorf("%d:%d    invalid identifier", ls.line, ls.col)
 	case ls.isReserved():
 		t, l := ls.getReserved()
+		fmt.Printf("lexeme returned is %v\n", l)
 		return ls.token(t, l, ls.line, ls.col), nil
 	case ls.isletter():
 		n := ls.id()
 		id := ls.readN(n)
+		fmt.Printf("lexeme returned is %v\n", id)
 		return ls.token("id", id, ls.line, ls.col), nil
 	default:
-		return ls.token(" ", ls.read(" "), ls.line, ls.col), fmt.Errorf("%d:%d    not an accepted character", ls.line, ls.col)
+		badChar := ls.read(" ")
+		return ls.token(" ", ls.read(" "), ls.line, ls.col), fmt.Errorf("%d:%d %s is not an accepted character", ls.line, ls.col, badChar)
 		// ----------------------------- Reserved Words ------------------------------------------------
 	}
 	return nil, nil
