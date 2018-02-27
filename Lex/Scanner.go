@@ -69,10 +69,7 @@ func (ls *LScanner) id() int {
 // Check if reserved
 func (ls *LScanner) isReserved() bool {
 	for i := 7; i > 0; i-- {
-		chars, err := ls.reader.Peek(i)
-		if err != nil {
-			return false
-		}
+		chars, _ := ls.reader.Peek(i)
 		_, ok := ls.reserved[string(chars)]
 		if ok {
 			return true
@@ -87,7 +84,6 @@ func (ls *LScanner) getReserved() (string, string) {
 	for i := 7; i > 0; i-- {
 		s, ok := ls.reserved[string(chars[:i])]
 		if ok {
-			ls.read(string(chars[:i]))
 			return s, string(chars[:i])
 		}
 	}
@@ -247,16 +243,17 @@ func (ls *LScanner) read(s string) string {
 	return string(chars)
 }
 
-func (ls *LScanner) readN(i int) string {
-	chars := make([]byte, i)
-	ls.reader.Read(chars)
-	return string(chars)
-}
-
 func (ls *LScanner) token(t, l string, line, col int) *Token {
 	ls.col += len(l)
-	fmt.Printf("token: %s\n", l)
-	return &Token{t, l, fmt.Sprintf("%d %d", line, col)}
+	lexeme := " "
+	if l != " " {
+		lexeme = ls.read(l)
+		fmt.Printf("lexeme: %s position %d\n", lexeme, ls.position)
+	} else {
+		lexeme = ls.read(l)
+	}
+	ls.position++
+	return &Token{t, lexeme, fmt.Sprintf("%d %d", line, col)}
 }
 
 func (ls *LScanner) NextToken() (*Token, error) {
@@ -264,43 +261,45 @@ func (ls *LScanner) NextToken() (*Token, error) {
 	case ls.isEOF(): // is eof
 		return nil, errors.New("EOF")
 	case ls.isNext(32): // space
-		ls.read(" ")
 		ls.col++
+		ls.token("space", " ", ls.line, ls.col)
 		return nil, nil
 	case ls.isNext(10): // new line
-		ls.read(" ")
 		ls.line++
 		ls.col = 0
+		ls.token("new line", " ", ls.line, ls.col)
 		return nil, nil
 	case ls.isNonzero():
 		n := ls.integer()
-		l, t := ls.isFraction(n)
+		f, t := ls.isFraction(n)
 		if !t {
-			return ls.token("intNum", ls.readN(n), ls.line, ls.col), nil
+			str, _ := ls.reader.Peek(n)
+			return ls.token("intNum", string(str), ls.line, ls.col), nil
 		}
-		return ls.token("floatNum", ls.readN(l), ls.line, ls.col), nil
+		str, _ := ls.reader.Peek(f)
+		return ls.token("floatNum", string(str), ls.line, ls.col), nil
 	case ls.isIdent("0"):
 		n, t := ls.isFraction(1)
 		if !t {
-			return ls.token("intNum", ls.read("0"), ls.line, ls.col), nil
+			return ls.token("intNum", "0", ls.line, ls.col), nil
 		}
-		return ls.token("floatNum", ls.readN(n), ls.line, ls.col), nil
+		str, _ := ls.reader.Peek(n)
+		return ls.token("floatNum", string(str), ls.line, ls.col), nil
 		// ----------------------------- Reserved Words ------------------------------------------------
 	case ls.isIdent("_"):
 		ls.read("_")
 		return ls.token("_", "_", ls.line, ls.col), fmt.Errorf("%d:%d    invalid identifier", ls.line, ls.col)
 	case ls.isReserved():
 		t, l := ls.getReserved()
-		fmt.Printf("lexeme returned is %v\n", l)
 		return ls.token(t, l, ls.line, ls.col), nil
 	case ls.isletter():
 		n := ls.id()
-		id := ls.readN(n)
-		fmt.Printf("lexeme returned is %v\n", id)
-		return ls.token("id", id, ls.line, ls.col), nil
+		str, _ := ls.reader.Peek(n)
+		return ls.token("id", string(str), ls.line, ls.col), nil
 	default:
-		badChar := ls.read(" ")
-		return ls.token(" ", ls.read(" "), ls.line, ls.col), fmt.Errorf("%d:%d %s is not an accepted character", ls.line, ls.col, badChar)
+		badChar, _ := ls.reader.Peek(1)
+		fmt.Printf("peeked %s at %d\n", badChar, ls.position)
+		return ls.token(" ", string(badChar), ls.line, ls.col), fmt.Errorf("%d:%d is not an accepted character at postion %s", ls.line, ls.col, badChar)
 		// ----------------------------- Reserved Words ------------------------------------------------
 	}
 	return nil, nil
