@@ -236,7 +236,7 @@ var predictionTable = map[string]map[string]int{
 	"EvalIndiceTail":    map[string]int{".": 57, "[": 58, "*": 59, "/": 59, "and": 59, "+": 59, "-": 59, "or": 59, "]": 59, "eq": 59, "neq": 59, "lt": 59, "gt": 59, "leq": 59, "geq": 59, ",": 59, ";": 59, ")": 59},
 	"EvalNestHead":      map[string]int{".": 60},
 	"Variable":          map[string]int{"id": 61},
-	"VariableTail":      map[string]int{"[": 62, ".": 63},
+	"VariableTail":      map[string]int{"[": 62, ".": 63, "=": 64, ")": 64},
 	"VarIndiceTail":     map[string]int{"[": 64, "=": 65},
 	"VarNest":           map[string]int{".": 66},
 	"FunctionCallExpr":  map[string]int{"(": 67},

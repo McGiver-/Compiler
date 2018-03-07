@@ -16,10 +16,9 @@ type Token struct {
 
 type LScanner struct {
 	reader   *bufio.Reader
-	col      int
 	line     int
+	col      int
 	reserved map[string]string
-	position int
 }
 
 // Reserved words with lexemes as their keys and types as their values
@@ -48,7 +47,7 @@ func CreateScanner(fileName string) (*LScanner, error) {
 		return nil, err
 	}
 	reader := bufio.NewReader(file)
-	return &LScanner{reader, 0, 1, reserved, 0}, nil
+	return &LScanner{reader, 1, 1, reserved}, nil
 }
 
 // Check if identifier and return length if so.
@@ -248,11 +247,10 @@ func (ls *LScanner) token(t, l string, line, col int) *Token {
 	lexeme := " "
 	if l != " " {
 		lexeme = ls.read(l)
-		fmt.Printf("lexeme: %s position %d\n", lexeme, ls.position)
+		fmt.Printf("lexeme: %s\t\tline:%d column:%d\n", lexeme, ls.line, col)
 	} else {
 		lexeme = ls.read(l)
 	}
-	ls.position++
 	return &Token{t, lexeme, fmt.Sprintf("%d %d", line, col)}
 }
 
@@ -261,7 +259,6 @@ func (ls *LScanner) NextToken() (*Token, error) {
 	case ls.isEOF(): // is eof
 		return nil, errors.New("EOF")
 	case ls.isNext(32): // space
-		ls.col++
 		ls.token("space", " ", ls.line, ls.col)
 		return nil, nil
 	case ls.isNext(10): // new line
@@ -298,8 +295,7 @@ func (ls *LScanner) NextToken() (*Token, error) {
 		return ls.token("id", string(str), ls.line, ls.col), nil
 	default:
 		badChar, _ := ls.reader.Peek(1)
-		fmt.Printf("peeked %s at %d\n", badChar, ls.position)
-		return ls.token(" ", string(badChar), ls.line, ls.col), fmt.Errorf("%d:%d is not an accepted character at postion %s", ls.line, ls.col, badChar)
+		return ls.token(" ", string(badChar), ls.line, ls.col), fmt.Errorf("%d:%d %s is not an accepted character", ls.line, ls.col, badChar)
 		// ----------------------------- Reserved Words ------------------------------------------------
 	}
 	return nil, nil

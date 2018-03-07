@@ -36,17 +36,25 @@ func (syn *SynAnalyzer) Parse() (errorList []error) {
 	var symbol string          // Symbol variable
 
 	pStack.Push("$")
+	printStack(pStack)
 	pStack.Push("Prog")         // Nonterminal that starts the progra
 	token, _ := syn.nextToken() // First token before loop
-
+	printStack(pStack)
 	for pStack.Top() != "$" { // Loop while not at the end of the program yet
+		printStack(pStack)
 		if !skipping {
 			symbol = pStack.Top().(string) // Peek at the top symbol
-			skipping = false
 		}
+		if symbol == "EPSILON" {
+			pStack.Pop()
+			continue
+		}
+		fmt.Printf("symbol %s\n", symbol)
 		if _, ok := terminals[symbol]; ok { // Enter if the symbol is a terminal
 			if symbol == token.Type { // The symbol at the top of the stack matches the read token
+				fmt.Printf("matched %s\n", token.Type)
 				pStack.Pop()
+				printStack(pStack)
 				token, _ = syn.nextToken()
 			} else {
 				skipping = true
@@ -64,7 +72,9 @@ func (syn *SynAnalyzer) Parse() (errorList []error) {
 			}
 		} else { // If the symbol was not a terminal i.e nonterminal
 			rhsList, err := syn.getProduction(symbol, token.Type)
+			fmt.Printf("symbol %s token %s lexeme %s rhsList %v position %s\n", symbol, token.Type, token.Lexeme, rhsList, token.Location)
 			if err != nil {
+				err = fmt.Errorf("error %v at %s token %s lexeme %s symbol %s", err, token.Location, token.Type, token.Lexeme, symbol)
 				errorList = append(errorList, err)
 				skipping = true
 				token, err := syn.nextToken()
@@ -89,14 +99,13 @@ func (syn *SynAnalyzer) Parse() (errorList []error) {
 				inverseRhsMultiplePush(pStack, rhsList)
 			}
 		}
-		newPrint := fmt.Sprintf("%v", pStack)
-		newPrint = strings.Replace(newPrint, "<nil>", "", -1)
-		newPrint = strings.Replace(newPrint, "&", "", -1)
-		newPrint = strings.Replace(newPrint, "&", "", -1)
-		newPrint = strings.Replace(newPrint, " ", "", -1)
-		fmt.Printf("STACK : %s\n", newPrint)
 	}
 	return
+}
+
+func printStack(stack *stackgo.Stack) {
+	newPrint := fmt.Sprintf("%s", stack.String())
+	fmt.Printf("STACK : %s\n", newPrint)
 }
 
 func inverseRhsMultiplePush(stack *stackgo.Stack, rhsList []string) {
