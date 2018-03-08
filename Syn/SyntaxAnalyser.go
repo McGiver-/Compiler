@@ -11,7 +11,7 @@ import (
 type SynAnalyzer struct {
 	tokens           []*Lex.Token
 	tokenIndex       int
-	attributeGrammar [96]string
+	attributeGrammar [93]string
 	predictionTable  map[string]map[string]int
 	parsingStack     *stackgo.Stack
 	semanticStack    *stackgo.Stack
