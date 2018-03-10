@@ -247,7 +247,6 @@ func (ls *LScanner) token(t, l string, line, col int) *Token {
 	lexeme := " "
 	if l != " " {
 		lexeme = ls.read(l)
-		fmt.Printf("lexeme: %s\t\tline:%d column:%d\n", lexeme, ls.line, col)
 	} else {
 		lexeme = ls.read(l)
 	}

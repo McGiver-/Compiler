@@ -37,7 +37,6 @@ func main() {
 	types := ""
 	for _, v := range tokens {
 		types += v.Type + " "
-		fmt.Printf("%v\n", v.Type)
 	}
 	ioutil.WriteFile(FileA2CC, []byte(types), os.ModePerm)
 
@@ -51,7 +50,7 @@ func main() {
 	analyzer, err := Syn.CreateAnalyzer(tokens)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Print(err)
 	}
 
 	errorList := analyzer.Parse()
