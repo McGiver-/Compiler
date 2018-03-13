@@ -198,6 +198,10 @@ var attributeGrammar = [93]string{
 	"Sign Factor",
 }
 
+var semanticAction = map[string]string{
+	"something": "something",
+}
+
 // This table has as key the Nonterminal. This is a key to another map which has as a key
 // the expected terminals and as value the number of the production that should be pushed to the stack.
 // These numbers correspond to the productions is the attributeGrammar array.
