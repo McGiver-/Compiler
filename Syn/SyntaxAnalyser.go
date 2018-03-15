@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/davecgh/go-spew/spew"
+
 	"github.com/McGiver-/Compiler/Lex"
 	"github.com/alediaferia/stackgo"
 )
@@ -33,7 +35,9 @@ func CreateAnalyzer(tokens []*Lex.Token) (*SynAnalyzer, error) {
 func (syn *SynAnalyzer) Parse() (errorList []error) {
 	skipping := false
 	pStack := syn.parsingStack // This is the stack that holds the parsing symbols that are pushed.
-	var symbol string          // Symbol variable
+	sStack := syn.semanticStack
+	var symbol string // Symbol variable
+	var previousToken *Lex.Token
 
 	pStack.Push("$")
 	pStack.Push("Prog")         // Nonterminal that starts the progra
@@ -48,11 +52,13 @@ func (syn *SynAnalyzer) Parse() (errorList []error) {
 		}
 		if string(symbol[0]) == "@" {
 			pStack.Pop()
-			handleSemanticAction(string(symbol[1:]), token, syn.semanticStack)
+			handleSemanticAction(string(symbol[1:]), previousToken, sStack)
+			continue
 		}
 		if _, ok := terminals[symbol]; ok { // Enter if the symbol is a terminal
 			if symbol == token.Type { // The symbol at the top of the stack matches the read token
 				pStack.Pop()
+				previousToken = token
 				token, _ = syn.nextToken()
 			} else {
 				skipping = true
@@ -97,11 +103,62 @@ func (syn *SynAnalyzer) Parse() (errorList []error) {
 			}
 		}
 	}
+	classListNode := sStack.Pop().(*Node)
+	fmt.Println(spew.Sdump(classListNode))
+	// fmt.Printf("classMemberInheritId %v\n", classListNode.LeftMostChild.LeftMostChild.RightSibling.LeftMostChild.Token)
 	return
 }
 
-func handleSemanticAction(action string, token *Lex.Token, semanticStack *stackgo.Stack) {
-
+func handleSemanticAction(action string, token *Lex.Token, stack *stackgo.Stack) {
+	if action == "id" {
+		id := makeNode("id", "id", token)
+		stack.Push(id)
+	}
+	if action == "InheritListMember" {
+		id := stack.Pop().(*Node)
+		inheritListMember := makeNode("InheritListMember", "InheritListMember", id.Token)
+		inheritListMember.adoptChildren(id)
+		top := stack.Top().(*Node)
+		if top.Type == "InheritListMember" {
+			top.makeSiblings(inheritListMember)
+		} else {
+			stack.Push(inheritListMember)
+		}
+	}
+	if action == "InheritList" {
+		inheritList := makeNode("InheritList", "InheritList", token)
+		top := stack.Top().(*Node)
+		if top.Type == "InheritListMember" {
+			stack.Pop()
+			inheritList.adoptChildren(top)
+			inheritList.Token = inheritList.LeftMostChild.Token
+			stack.Push(inheritList)
+		} else {
+			stack.Push(makeNode("InheritList", "EPSILON", nil))
+		}
+	}
+	if action == "ClassMember" {
+		classMember := makeNode("ClassMember", "ClassMember", token)
+		inheritList := stack.Pop().(*Node)
+		id := stack.Pop().(*Node)
+		classMember.adoptChildren(id.makeSiblings(inheritList))
+		classMember.Token = classMember.LeftMostChild.Token
+		top := stack.Top()
+		if top == nil {
+			stack.Push(classMember)
+			return
+		}
+		node := top.(*Node)
+		if node.Type == "ClassMember" {
+			node.makeSiblings(classMember)
+		}
+	}
+	if action == "ClassList" {
+		classList := makeNode("ClassList", "ClassList", token)
+		classList.adoptChildren(stack.Pop().(*Node))
+		classList.Token = classList.LeftMostChild.Token
+		stack.Push(classList)
+	}
 }
 
 func printStack(stack *stackgo.Stack) {

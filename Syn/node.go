@@ -1,6 +1,8 @@
 package Syn
 
-import "github.com/McGiver-/Compiler/Lex"
+import (
+	"github.com/McGiver-/Compiler/Lex"
+)
 
 type Node struct {
 	Type            string
@@ -60,22 +62,20 @@ func (n *Node) adoptChildren(y *Node) *Node {
 	return n
 }
 
-func makeFamily(op *Lex.Token, kids ...*Node) *Node {
-	return makeNode(op).adoptChildren(kids[0].makeSiblings(kids[1:]...))
+func makeFamily(nodeType, lexeme string, op *Lex.Token, kids ...*Node) *Node {
+	return makeNode(nodeType, lexeme, op).adoptChildren(kids[0].makeSiblings(kids[1:]...))
 }
 
 func (n *Node) set(token *Lex.Token) {
 	n.Token = token
 }
 
-func makeNode(t *Lex.Token) *Node {
-	return &Node{
-		t.Type,
-		t.Lexeme,
-		t,
-		nil,
-		nil,
-		nil,
-		nil,
+func makeNode(s, lexeme string, t *Lex.Token) *Node {
+	node := &Node{
+		s,
+		lexeme,
+		t, nil, nil, nil, nil,
 	}
+	node.LeftMostSibling = node
+	return node
 }
