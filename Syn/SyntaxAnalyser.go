@@ -46,6 +46,10 @@ func (syn *SynAnalyzer) Parse() (errorList []error) {
 			pStack.Pop()
 			continue
 		}
+		if string(symbol[0]) == "@" {
+			pStack.Pop()
+			handleSemanticAction(string(symbol[1:]), token, syn.semanticStack)
+		}
 		if _, ok := terminals[symbol]; ok { // Enter if the symbol is a terminal
 			if symbol == token.Type { // The symbol at the top of the stack matches the read token
 				pStack.Pop()
@@ -94,6 +98,10 @@ func (syn *SynAnalyzer) Parse() (errorList []error) {
 		}
 	}
 	return
+}
+
+func handleSemanticAction(action string, token *Lex.Token, semanticStack *stackgo.Stack) {
+
 }
 
 func printStack(stack *stackgo.Stack) {
