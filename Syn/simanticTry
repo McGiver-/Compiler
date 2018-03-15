@@ -16,7 +16,7 @@
    FuncHeadTail      -> sr id ( FParams ) | ( FParams ) 
                       | EPSILON 
    FuncBody          -> { FuncVarDecl }
-   FuncDecl	     -> ( FParams @FparamList ) ; ClassVarDecl	
+   FuncDecl	         -> ( FParams @FparamList ) ; ClassVarDecl	
    FuncVarDecl       -> StatementNoAssign StatementTail 
                       | Type @Type FuncVarDeclTail 
                       | EPSILON 
@@ -76,9 +76,6 @@
    ArraySizeTail     -> ArraySize ArraySizeTail 
                       | EPSILON 
    Type              -> float @float| id @id | int @int
-   FParams           -> Type id ArraySizeTail FParamsTail 
-                      | EPSILON 
-   FParamsTail       -> , FParams | EPSILON 
    AParams           -> Expr AParamsTail | EPSILON 
    AParamsTail       -> , AParams | EPSILON 
    AssignOp          -> = 
