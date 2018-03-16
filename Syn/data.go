@@ -210,7 +210,7 @@ var predictionTable = map[string]map[string]int{
 	"ProgBody":          map[string]int{"program": 3},
 	"ClassDecl":         map[string]int{"class": 4},
 	"Inherit":           map[string]int{":": 5, "{": 6},
-	"InheritList":       map[string]int{",": 7, "{": 8},
+	"InheritList":       map[string]int{",": 7, "{": 6},
 	"ClassVarDecl":      map[string]int{"float": 9, "id": 9, "int": 9, "}": 6},
 	"Decl":              map[string]int{"float": 10, "id": 10, "int": 10},
 	"ClassVarDeclTail":  map[string]int{"[": 11, ";": 11, "(": 85},

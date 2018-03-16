@@ -114,6 +114,14 @@ func handleSemanticAction(action string, token *Lex.Token, stack *stackgo.Stack)
 		id := makeNode("id", "id", token)
 		stack.Push(id)
 	}
+	if action == "float" {
+		floatNode := makeNode("float", "float", token)
+		stack.Push(floatNode)
+	}
+	if action == "int" {
+		intNode := makeNode("int", "int", token)
+		stack.Push(intNode)
+	}
 	if action == "InheritListMember" {
 		id := stack.Pop().(*Node)
 		inheritListMember := makeNode("InheritListMember", "InheritListMember", id.Token)
@@ -158,6 +166,32 @@ func handleSemanticAction(action string, token *Lex.Token, stack *stackgo.Stack)
 		classList.adoptChildren(stack.Pop().(*Node))
 		classList.Token = classList.LeftMostChild.Token
 		stack.Push(classList)
+	}
+	if action == "MemberDecl" {
+
+	}
+	if action == "MemberList" {
+		memberList := makeNode("MemberList", "MemberList", token)
+		memberList.adoptChildren(stack.Pop().(*Node))
+		memberList.Token = memberList.LeftMostChild.Token
+		stack.Push(memberList)
+	}
+	if action == "MemberDecl" {
+		id := stack.Pop().(*Node)
+		memberDecl := makeNode("MemberDecl", "MemberDecl", id.Token)
+		memberDecl.adoptChildren(id)
+		top := stack.Top().(*Node)
+		if top.Type == "MemberDecl" {
+			top.makeSiblings(memberDecl)
+		} else {
+			stack.Push(memberDecl)
+		}
+	}
+	if action == "FparamList" {
+		fparamList := makeNode("FparamList", "FparamList", token)
+		fparamList.adoptChildren(stack.Pop().(*Node))
+		fparamList.Token = fparamList.LeftMostChild.Token
+		stack.Push(fparamList)
 	}
 }
 
