@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/McGiver-/Compiler/Lex"
+	"github.com/McGiver-/Compiler/Sem"
 	"github.com/McGiver-/Compiler/Syn"
 )
 
@@ -53,9 +54,12 @@ func main() {
 		fmt.Print(err)
 	}
 
-	errorList := analyzer.Parse()
+	errorList, rootNode := analyzer.Parse()
 	for _, v := range errorList {
 		fmt.Println(v)
 	}
+
+	tableAnalyzer := Sem.CreateAnalyzer(rootNode)
+	err = tableAnalyzer.CreateTables()
 
 }

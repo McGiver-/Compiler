@@ -2,38 +2,43 @@
   /*                                            GRAMMAR                                                        */
   /*-----------------------------------------------------------------------------------------------------------*/
   
-   Prog              -> ProgBody @ProgBody | FuncDef @FuncDefList Prog | ClassDecl @ClassList Prog 
+   Prog              -> @ClassListAndFuncDefList ProgBody @ProgBody | FuncDef Prog | ClassDecl  Prog 
    ProgBody          -> program FuncBody ;
-   ClassDecl         -> class id @id Inherit @InheritList { ClassVarDecl @MemberList } ; 
-   Inherit           -> : id @InheritListMember InheritList | EPSILON 
-   InheritList       -> , id @InheritListMember InheritList | EPSILON 
+   FuncDef           -> FuncHead FuncBody @FuncDef ;
+   FuncBody          -> { FuncVarDecl @StatBlock }
+   ClassDecl         -> class id @id Inherit @InheritList { ClassVarDecl @MemberList } @ClassMember ; 
    ClassVarDecl      -> Decl ClassVarDeclTail 
-                      | EPSILON
-   Decl              -> Type @Type id @id
-   ClassVarDeclTail  -> ArraySizeTail ; ClassVarDecl 
-                      | FuncDecl @MemberDecl
-   FuncHead          -> Type id FuncHeadTail 
-   FuncHeadTail      -> sr id ( FParams ) | ( FParams ) 
-                      | EPSILON 
-   FuncBody          -> { FuncVarDecl }
-   FuncDecl	         -> ( FParams @FparamList ) ; ClassVarDecl	
-   FuncVarDecl       -> StatementNoAssign StatementTail 
-                      | Type @Type FuncVarDeclTail 
-                      | EPSILON 
-   FuncVarDeclTail   -> id ArraySizeTail ; FuncVarDecl 
-                      | VariableTail AssignStatTail ; StatementTail    
-   ArraySize         -> [ intNum @DimListMember] 
-   ArraySizeTail     -> ArraySize ArraySizeTail 
-                      | EPSILON 
+                      | EPSILON @EPSILON
    Type              -> float @float | id @id | int @int
-   FParams           -> Type @Type id @id ArraySizeTail @DimList @FparamMember FParamsTail 
+   Decl              -> Type @Type id @id
+   ClassVarDeclTail  -> ArraySizeTail ; @DimList @VarDecl ClassVarDecl 
+                      | FuncDecl 
+   FuncVarDecl       -> StatementNoAssign StatementTail 
+                      | Type @Type FuncVarDeclTail @StatOrVarDecl 
                       | EPSILON 
+   FuncVarDeclTail   -> id @id ArraySizeTail @DimList @VarDecl ; FuncVarDecl 
+                      | VariableTail @Var AssignStatTail @AssignStat ; StatementTail    
+   Variable          -> id @id VariableTail 
+   VariableTail      -> VarNest | VarIndiceTail 
+   VarIndiceTail     -> Indice VariableTail 
+                      | EPSILON 
+   VarNest           -> . Variable
    FParamsTail       -> , FParams | EPSILON 
    ProgBody          -> program FuncBody ; 
+   Inherit           -> : id @id @InheritListMember InheritList | EPSILON 
+   InheritList       -> , id @id @InheritListMember InheritList | EPSILON 
    FuncDefList       -> Decl FuncDefListTail 
                       | EPSILON
    FuncDefListTail   -> FuncDef FuncDefList 
-   FuncDef           -> FuncHead FuncBody ;
+   FuncDecl	         -> ( FParams @FparamList ) ; @FuncDecl ClassVarDecl	
+   ArraySize         -> [ intNum @intNum ] 
+   ArraySizeTail     -> ArraySize ArraySizeTail 
+                      | EPSILON 
+   FuncHead          -> Type @Type id @id FuncHeadTail 
+   FuncHeadTail      -> @ScopeSpec sr id @id  ( FParams @FparamList ) | @EmptyScope ( FParams @FparamList ) 
+                      | EPSILON  /// i think this shouldnt be here 
+   FParams           -> Type @Type id @id ArraySizeTail @DimList @FparamMember FParamsTail 
+                      | EPSILON 
    AssignStat        -> Variable AssignStatTail 
    AssignStatTail    -> AssignOp Expr 
    Statement         -> AssignStat ; | StatementNoAssign 
@@ -47,40 +52,36 @@
    StatBlock         -> { StatementTail } | Statement 
                       | EPSILON 
    Expr              -> ArithExpr RelExprTail 
-   RelExpr           -> ArithExpr RelOp ArithExpr 
-   RelExprTail       -> RelOp ArithExpr | EPSILON 
-   ArithExpr         -> Term ArithExprTail 
-   ArithExprTail     -> AddOp Term ArithExprTail 
+   RelExpr           -> ArithExpr RelOp @RelOp ArithExpr @RelExpr
+   RelExprTail       -> RelOp @RelOp ArithExpr @RelExpr | EPSILON 
+   ArithExpr         -> Term @Term ArithExprTail 
+   ArithExprTail     -> AddOp @AddOp Term @Term @ArithExpr ArithExprTail 
                       | EPSILON 
    Term              -> Factor TermTail 
    TermTail          -> MultOp Factor TermTail 
                       | EPSILON 
-   Factor            -> ( ArithExpr ) | not Factor | EvalExprHead 
-                      | Num | Sign Factor 
-   Num               -> floatNum | intNum 
-   Sign              -> + | - 
+   Factor            -> ( ArithExpr ) | not Factor @NotFactor | EvalExprHead 
+                      | Num @Num | Sign Factor @SignFactor
+   Num               -> floatNum @floatNum | intNum @intNum
+   Sign              -> + @+ | - @-
    EvalExprHead      -> id EvalExprTail 
    EvalExprTail      -> FunctionCallExpr | EvalIndiceTail 
    EvalIndiceHead    -> Indice EvalIndiceTail 
    EvalIndiceTail    -> EvalNestHead | EvalIndiceHead 
                       | EPSILON 
    EvalNestHead      -> . EvalExprHead 
-   Variable          -> id VariableTail 
-   VariableTail      -> VarNest | VarIndiceTail 
-   VarIndiceTail     -> Indice VariableTail 
-                      | EPSILON 
-   VarNest           -> . Variable 
-   FunctionCallExpr  -> ( AParams ) 
+   
+   FunctionCallExpr  -> ( AParams @Aparams ) 
    Indice            -> [ ArithExpr ] 
-   ArraySize         -> [ intNum ] 
+   ArraySize         -> [ intNum @DimList] 
    ArraySizeTail     -> ArraySize ArraySizeTail 
                       | EPSILON 
    Type              -> float @float| id @id | int @int
-   AParams           -> Expr AParamsTail | EPSILON 
+   AParams           -> Expr @Expr AParamsTail | EPSILON 
    AParamsTail       -> , AParams | EPSILON 
    AssignOp          -> = 
-   RelOp             -> eq | geq | gt | leq | lt | neq 
-   AddOp             -> + | - | or 
+   RelOp             -> eq @eq | geq @geq | gt @gt | leq @leq | lt @lt | neq @neq
+   AddOp             -> + @+ | - @- | or @or
    MultOp            -> * | / | and 
 
   /*-----------------------------------------------------------------------------------------------------------*/

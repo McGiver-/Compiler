@@ -1,6 +1,8 @@
 package Syn
 
 import (
+	"fmt"
+
 	"github.com/McGiver-/Compiler/Lex"
 )
 
@@ -63,7 +65,10 @@ func (n *Node) adoptChildren(y *Node) *Node {
 }
 
 func makeFamily(nodeType, lexeme string, op *Lex.Token, kids ...*Node) *Node {
-	return makeNode(nodeType, lexeme, op).adoptChildren(kids[0].makeSiblings(kids[1:]...))
+	if len(kids) > 1 {
+		return makeNode(nodeType, lexeme, op).adoptChildren(kids[0].makeSiblings(kids[1:]...))
+	}
+	return makeNode(nodeType, lexeme, op).adoptChildren(kids[0])
 }
 
 func (n *Node) set(token *Lex.Token) {
@@ -78,4 +83,39 @@ func makeNode(s, lexeme string, t *Lex.Token) *Node {
 	}
 	node.LeftMostSibling = node
 	return node
+}
+
+func (n *Node) GetChild(name string) (*Node, error) {
+	child := n.LeftMostChild
+	for child != nil {
+		if child.Type == name {
+			return child, nil
+		}
+		child = child.RightSibling
+	}
+	return nil, fmt.Errorf("could not find child")
+}
+
+func (n *Node) GetChildLink(names ...string) ([]*Node, error) {
+	var children []*Node
+	child := n.LeftMostChild
+	for child != nil {
+		if match(child.Type, names) {
+			children = append(children, child)
+		}
+		child = child.RightSibling
+	}
+	if len(children) == 0 {
+		return nil, fmt.Errorf("could not find children")
+	}
+	return children, nil
+}
+
+func match(s string, ss []string) bool {
+	for _, v := range ss {
+		if s == v {
+			return true
+		}
+	}
+	return false
 }

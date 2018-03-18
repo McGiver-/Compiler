@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
-
 	"github.com/McGiver-/Compiler/Lex"
 	"github.com/alediaferia/stackgo"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type SynAnalyzer struct {
@@ -32,7 +31,7 @@ func CreateAnalyzer(tokens []*Lex.Token) (*SynAnalyzer, error) {
 	}, nil
 }
 
-func (syn *SynAnalyzer) Parse() (errorList []error) {
+func (syn *SynAnalyzer) Parse() (errorList []error, rootNode *Node) {
 	skipping := false
 	pStack := syn.parsingStack // This is the stack that holds the parsing symbols that are pushed.
 	sStack := syn.semanticStack
@@ -103,53 +102,77 @@ func (syn *SynAnalyzer) Parse() (errorList []error) {
 			}
 		}
 	}
-	classListNode := sStack.Pop().(*Node)
-	fmt.Println(spew.Sdump(classListNode))
-	// fmt.Printf("classMemberInheritId %v\n", classListNode.LeftMostChild.LeftMostChild.RightSibling.LeftMostChild.Token)
+	sStack.Pop()
+	rootNode = sStack.Pop().(*Node)
+	fmt.Println(spew.Sdump(rootNode))
 	return
 }
 
 func handleSemanticAction(action string, token *Lex.Token, stack *stackgo.Stack) {
-	if action == "id" {
-		id := makeNode("id", "id", token)
-		stack.Push(id)
+	if action == "EPSILON" {
+		stack.Push(makeNode("EPSILON", "EPSILON", nil))
 	}
-	if action == "float" {
-		floatNode := makeNode("float", "float", token)
-		stack.Push(floatNode)
+	switch action {
+	case "id", "float", "int":
+		node := makeNode(action, action, token)
+		stack.Push(node)
 	}
-	if action == "int" {
-		intNode := makeNode("int", "int", token)
-		stack.Push(intNode)
+
+	if action == "Type" {
+		t := stack.Pop().(*Node)
+		stack.Push(makeFamily("Type", "Type", t.Token, t))
 	}
+
+	if action == "ClassListAndFuncDefList" {
+		if stack.Top().(*Node).Type == "FuncDef" {
+			funcDefMember := stack.Pop().(*Node)
+			if stack.Top() != nil && stack.Top().(*Node).Type == "ClassMember" {
+				prog := makeFamily("Prog", "Prog", token, stack.Pop().(*Node), funcDefMember)
+				prog.Token = prog.LeftMostChild.Token
+				stack.Push(prog)
+			} else {
+				prog := makeFamily("Prog", "Prog", token, funcDefMember)
+				prog.Token = prog.LeftMostChild.Token
+				stack.Push(prog)
+			}
+		} else if stack.Top().(*Node).Type == "ClassMember" {
+			prog := makeFamily("Prog", "Prog", token, stack.Pop().(*Node))
+			prog.Token = prog.LeftMostChild.Token
+			stack.Push(prog)
+		}
+
+	}
+
+	if action == "InheritList" {
+		top := stack.Top().(*Node)
+		if top.Value == "EPSILON" {
+			stack.Pop()
+			if stack.Top().(*Node).Type == "InheritListMember" {
+				inheritList := makeFamily("InheritList", "InheritList", token, stack.Pop().(*Node))
+				inheritList.Token = inheritList.LeftMostChild.Token
+				stack.Push(inheritList)
+			} else {
+				stack.Push(makeNode("InheritList", "EPSILON", nil))
+			}
+		}
+	}
+
 	if action == "InheritListMember" {
 		id := stack.Pop().(*Node)
-		inheritListMember := makeNode("InheritListMember", "InheritListMember", id.Token)
-		inheritListMember.adoptChildren(id)
+		inheritListMember := makeFamily("InheritListMember", "InheritListMember", id.Token, id)
 		top := stack.Top().(*Node)
-		if top.Type == "InheritListMember" {
+		if top.Value == "InheritListMember" {
 			top.makeSiblings(inheritListMember)
 		} else {
 			stack.Push(inheritListMember)
 		}
 	}
-	if action == "InheritList" {
-		inheritList := makeNode("InheritList", "InheritList", token)
-		top := stack.Top().(*Node)
-		if top.Type == "InheritListMember" {
-			stack.Pop()
-			inheritList.adoptChildren(top)
-			inheritList.Token = inheritList.LeftMostChild.Token
-			stack.Push(inheritList)
-		} else {
-			stack.Push(makeNode("InheritList", "EPSILON", nil))
-		}
-	}
+
 	if action == "ClassMember" {
-		classMember := makeNode("ClassMember", "ClassMember", token)
+		memberList := stack.Pop().(*Node)
 		inheritList := stack.Pop().(*Node)
 		id := stack.Pop().(*Node)
-		classMember.adoptChildren(id.makeSiblings(inheritList))
+		classMember := makeFamily("ClassMember", "ClassMember", token, id, inheritList, memberList)
 		classMember.Token = classMember.LeftMostChild.Token
 		top := stack.Top()
 		if top == nil {
@@ -161,37 +184,151 @@ func handleSemanticAction(action string, token *Lex.Token, stack *stackgo.Stack)
 			node.makeSiblings(classMember)
 		}
 	}
-	if action == "ClassList" {
-		classList := makeNode("ClassList", "ClassList", token)
-		classList.adoptChildren(stack.Pop().(*Node))
-		classList.Token = classList.LeftMostChild.Token
-		stack.Push(classList)
-	}
-	if action == "MemberDecl" {
-
-	}
-	if action == "MemberList" {
-		memberList := makeNode("MemberList", "MemberList", token)
-		memberList.adoptChildren(stack.Pop().(*Node))
-		memberList.Token = memberList.LeftMostChild.Token
-		stack.Push(memberList)
-	}
-	if action == "MemberDecl" {
+	/// funcDef
+	if action == "FuncDef" {
+		if stack.Top().(*Node).Type == "EPSILON" {
+			stack.Pop() // Poping EPSILON
+		}
+		statBlock := stack.Pop().(*Node)
+		fmt.Printf("statBlock is %v", statBlock)
+		fParamList := stack.Pop().(*Node)
 		id := stack.Pop().(*Node)
-		memberDecl := makeNode("MemberDecl", "MemberDecl", id.Token)
-		memberDecl.adoptChildren(id)
-		top := stack.Top().(*Node)
-		if top.Type == "MemberDecl" {
-			top.makeSiblings(memberDecl)
-		} else {
-			stack.Push(memberDecl)
+		scopeSpec := stack.Pop().(*Node)
+		typeNode := stack.Pop().(*Node)
+		funcDef := makeFamily("FuncDef", "FuncDef", token, typeNode, scopeSpec, id, fParamList, statBlock)
+		funcDef.Token = funcDef.LeftMostChild.Token
+		top := stack.Top()
+		if top == nil || top.(*Node).Type == "ClassMember" {
+			stack.Push(funcDef)
+			return
+		}
+		node := top.(*Node)
+		if node.Type == "FuncDef" {
+			node.makeSiblings(funcDef)
 		}
 	}
+	/// EmptyScopeSpec
+	if action == "EmptyScope" {
+		id := stack.Pop().(*Node)
+		stack.Push(makeNode("Scope", "EPSILON", token))
+		stack.Push(id)
+	}
+	///
+
+	/// ScopeSpec
+	if action == "ScopeSpec" {
+		scope := makeFamily("Scope", "Scope", token, stack.Pop().(*Node))
+		scope.Token = scope.LeftMostChild.Token
+		stack.Push(scope)
+	}
+	/// ScopeSpec
+	if action == "MemberList" {
+		top := stack.Top().(*Node)
+		if top.Value == "EPSILON" {
+			stack.Pop()
+			if stack.Top().(*Node).Type == "FuncDecl" || stack.Top().(*Node).Type == "VarDecl" {
+				memberList := makeFamily("MemberList", "MemberList", token, stack.Pop().(*Node))
+				memberList.Token = memberList.LeftMostChild.Token
+				stack.Push(memberList)
+			} else {
+				stack.Push(makeNode("MemberList", "EPSILON", nil))
+			}
+		}
+	}
+
+	//StatBlock
+	if action == "StatBlock" {
+		top := stack.Top().(*Node)
+		if top.Value == "EPSILON" {
+			stack.Pop()
+			if stack.Top().(*Node).Type == "VarDecl" || stack.Top().(*Node).Type == "Stat" {
+				statBlock := makeFamily("StatBlock", "StatBlock", token, stack.Pop().(*Node))
+				statBlock.Token = statBlock.LeftMostChild.Token
+				stack.Push(statBlock)
+			} else {
+				stack.Push(makeNode("StatBlock", "EPSILON", nil))
+			}
+		} else {
+			statBlock := makeFamily("StatBlock", "StatBlock", token, stack.Pop().(*Node))
+			statBlock.Token = statBlock.LeftMostChild.Token
+			stack.Push(statBlock)
+		}
+	}
+	//
+
+	if action == "VarDecl" {
+		dimList := stack.Pop().(*Node)
+		id := stack.Pop().(*Node)
+		typeNode := stack.Pop().(*Node)
+		varDecl := makeFamily("VarDecl", "VarDecl", typeNode.Token, typeNode, id, dimList)
+		top := stack.Top().(*Node)
+		if top.Type == "FuncDecl" || top.Type == "VarDecl" || top.Type == "Stat" {
+			top.makeSiblings(varDecl)
+		} else {
+			stack.Push(varDecl)
+		}
+	}
+	if action == "FuncDecl" {
+		fparamList := stack.Pop().(*Node)
+		id := stack.Pop().(*Node)
+		typeNode := stack.Pop().(*Node)
+		funcDecl := makeFamily("FuncDecl", "FuncDecl", typeNode.Token, typeNode, id, fparamList)
+		top := stack.Top().(*Node)
+		if top.Type == "FuncDecl" || top.Type == "VarDecl" {
+			top.makeSiblings(funcDecl)
+		} else {
+			stack.Push(funcDecl)
+		}
+	}
+
 	if action == "FparamList" {
-		fparamList := makeNode("FparamList", "FparamList", token)
-		fparamList.adoptChildren(stack.Pop().(*Node))
-		fparamList.Token = fparamList.LeftMostChild.Token
-		stack.Push(fparamList)
+		top := stack.Top().(*Node)
+		if top.Value == "EPSILON" {
+			stack.Pop()
+			if stack.Top().(*Node).Type == "FparamMember" {
+				fparamList := makeFamily("FparamList", "FparamList", token, stack.Pop().(*Node))
+				fparamList.Token = fparamList.LeftMostChild.Token
+				stack.Push(fparamList)
+			} else {
+				stack.Push(makeNode("FparamList", "EPSILON", nil))
+			}
+		}
+	}
+	if action == "FparamMember" {
+		dimList := stack.Pop().(*Node)
+		id := stack.Pop().(*Node)
+		typeNode := stack.Pop().(*Node)
+		fparamMember := makeFamily("FparamMember", "FparaMember", token, typeNode, id, dimList)
+		fparamMember.Token = fparamMember.LeftMostChild.Token
+		top := stack.Top().(*Node)
+		if top.Type == "FparamMember" {
+			top.makeSiblings(fparamMember)
+		} else {
+			stack.Push(fparamMember)
+		}
+	}
+
+	if action == "DimList" {
+		top := stack.Top().(*Node)
+		if top.Value == "EPSILON" {
+			stack.Pop()
+			if stack.Top().(*Node).Type == "intNum" {
+				dimList := makeFamily("DimList", "DimList", token, stack.Pop().(*Node))
+				dimList.Token = dimList.LeftMostChild.Token
+				stack.Push(dimList)
+			} else {
+				stack.Push(makeNode("DimList", "EPSILON", nil))
+			}
+		}
+	}
+	if action == "intNum" {
+		intNum := makeNode("intNum", token.Lexeme, token)
+		top := stack.Top().(*Node)
+		if top.Type == "intNum" {
+			top.makeSiblings(intNum)
+		} else {
+			stack.Push(intNum)
+		}
 	}
 }
 
