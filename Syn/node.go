@@ -85,18 +85,18 @@ func makeNode(s, lexeme string, t *Lex.Token) *Node {
 	return node
 }
 
-func (n *Node) GetChild(name string) (*Node, error) {
+func (n *Node) GetChild(name string) *Node {
 	child := n.LeftMostChild
 	for child != nil {
 		if child.Type == name {
-			return child, nil
+			return child
 		}
 		child = child.RightSibling
 	}
-	return nil, fmt.Errorf("could not find child")
+	return &Node{}
 }
 
-func (n *Node) GetChildLink(names ...string) ([]*Node, error) {
+func (n *Node) GetChildLink(names ...string) []*Node {
 	var children []*Node
 	child := n.LeftMostChild
 	for child != nil {
@@ -105,10 +105,7 @@ func (n *Node) GetChildLink(names ...string) ([]*Node, error) {
 		}
 		child = child.RightSibling
 	}
-	if len(children) == 0 {
-		return nil, fmt.Errorf("could not find children")
-	}
-	return children, nil
+	return children
 }
 
 func match(s string, ss []string) bool {
@@ -118,4 +115,35 @@ func match(s string, ss []string) bool {
 		}
 	}
 	return false
+}
+
+//AsumeFuncDefNode
+func (n *Node) GetFuncVars() ([]string, []string, error) {
+	var names []string
+	var types []string
+	statBlock := n.GetChild("StatBlock")
+	vars := statBlock.GetChildLink("VarDecl")
+
+	if len(vars) == 0 {
+		return nil, nil, fmt.Errorf("could not find vars")
+	}
+
+	for _, variable := range vars {
+		varname := variable.GetChild("id")
+		t := variable.GetChild("Type")
+		_type := t.Token.Lexeme + " "
+		dimlist := variable.GetChild("DimList")
+		dims := dimlist.GetChildLink("intNum")
+		for _, dim := range dims {
+			_type += dim.Value + " "
+		}
+		types = append(types, _type)
+		names = append(names, varname.Token.Lexeme)
+	}
+
+	if len(names) == 0 {
+		return nil, nil, fmt.Errorf("could not find vars")
+	}
+
+	return names, types, nil
 }

@@ -2,6 +2,7 @@ package Sem
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/McGiver-/Compiler/Syn"
 	"github.com/davecgh/go-spew/spew"
@@ -9,21 +10,15 @@ import (
 
 type Analyzer struct {
 	rootNode *Syn.Node
-	table    SymbolTable
+	table    *table
 }
 
 func CreateAnalyzer(rootNode *Syn.Node) *Analyzer {
 	return &Analyzer{rootNode, &table{}}
 }
 
-type SymbolTable interface {
-	addEntry(string, string, string, bool)
-	getEntries() []*entry
-	populateFuncTable(names, kinds, types []string) error
-}
-
 type table struct {
-	parent  SymbolTable
+	parent  *table
 	entries []*entry
 }
 
@@ -31,7 +26,24 @@ type entry struct {
 	name  string
 	kind  string
 	_type string
-	child SymbolTable
+	child *table
+}
+
+func (t *table) findTable(entryName string) *table {
+	if t == nil {
+		return nil
+	}
+	for _, entry := range t.getEntries() {
+		if entry.name == entryName {
+			return entry.child
+		} else {
+			table := entry.child.findTable(entryName)
+			if table != nil {
+				return table
+			}
+		}
+	}
+	return nil
 }
 
 func (t *table) addEntry(name, kind, _type string, make bool) {
@@ -47,128 +59,204 @@ func (t *table) getEntries() []*entry {
 	return t.entries
 }
 
-func (a *Analyzer) CreateTables() error {
-	a.createTables()
+func (a *Analyzer) CreateTables() (errors []error) {
+	a.createClasses()
 	a.addFreeFuncs()
 	a.addFuncs()
+	errors = append(errors, a.inheritMembers()...)
+	errors = append(errors, a.table.findDuplicatesInTables()...)
 	spew.Dump(a.table)
-	return nil
+	return removeDuplicates(errors)
 }
 
-func (a *Analyzer) addFuncs() error {
-	funcDefList, err := a.rootNode.GetChildLink("FuncDef")
-	if err != nil {
-		return fmt.Errorf("could not find funcDefList")
+func (t *table) findDuplicatesInTables() (errors []error) {
+	currentTable := t
+	if currentTable == nil {
+		return nil
 	}
+	m := make(map[string]bool)
+	for _, k := range currentTable.getEntries() {
+		if m[k.name] {
+			var parent *entry
+			if currentTable.parent == nil {
+				errors = append(errors, fmt.Errorf("%s: %s declared twice in global scope", k.kind, k.name))
+				continue
+			}
+			for _, parentEntry := range currentTable.parent.getEntries() {
+				if parentEntry.child == currentTable {
+					parent = parentEntry
+				}
+			}
+			errors = append(errors, fmt.Errorf("%s: %s declared twice in %s: %s", k.kind, k.name, parent.kind, parent.name))
+		}
+		m[k.name] = true
+		errors = append(errors, k.child.findDuplicatesInTables()...)
+	}
+	return
+}
+
+func (a *Analyzer) inheritMembers() (errors []error) {
+	for _, entry := range a.table.getEntries() {
+		if entry.kind != "class" {
+			continue
+		}
+		classtable := a.table.findTable(entry.name)
+		for _, parentClass := range strings.Split(strings.TrimSpace(entry._type), " ") {
+			if parentClass == "" {
+				continue
+			}
+			if a.table.findTable(parentClass) == nil {
+				errors = append(errors, fmt.Errorf("class :%s inheritied and not declared", parentClass))
+				continue
+			}
+			for _, parentEntry := range a.table.findTable(parentClass).getEntries() {
+				if hasDuplicateEntry(parentEntry, classtable.getEntries()) {
+					errors = append(errors, fmt.Errorf("Warning shadowing %s from class %v in class %s", parentEntry.name, parentClass, entry.name))
+					continue
+				}
+				classtable.entries = append(classtable.entries, parentEntry)
+			}
+		}
+	}
+	return
+}
+
+func hasDuplicateEntry(e *entry, entries []*entry) bool {
+	for _, k := range entries {
+		if e.name == k.name {
+			return true
+		}
+	}
+	return false
+}
+
+func (a *Analyzer) addFuncs() (errors []error) {
+	funcDefList := a.rootNode.GetChildLink("FuncDef")
+	paramNames := make([]string, 0)
+	types := make([]string, 0)
+	if len(funcDefList) == 0 {
+		return append(errors, fmt.Errorf("could not find funcDefList"))
+	}
+
 	for _, funcDef := range funcDefList {
-		id, err := funcDef.GetChild("id")
-		funcName := id.Token.Lexeme
-		scope, err := funcDef.GetChild("Scope")
-		if err != nil {
-			return fmt.Errorf("could not find scope")
+		retType := funcDef.Token.Lexeme
+		scope := funcDef.GetChild("Scope")
+		if scope.Value == "EPSILON" {
+			continue
 		}
 		classBelongs := scope.Token.Lexeme
-		retType := funcDef.Token.Lexeme
-		paramNames := make([]string, 0)
-		types := make([]string, 0)
+		classTable := a.table.findTable(classBelongs)
 
-		for _, entry := range a.table.getEntries() {
-			if entry.name != classBelongs || entry.kind != "class" {
-				continue
-			}
-			classTable := entry.child
-			fplist, err := funcDef.GetChild("FparamList")
-			if err != nil {
-				classTable.addEntry(funcName, "function", retType, true)
-				continue
-			}
-			fpMembers, err := fplist.GetChildLink("FparamMember")
-			if err != nil {
-				classTable.addEntry(funcName, "function", retType, true)
-				continue
-			}
-			for _, member := range fpMembers {
-				t := member.Token.Type + " "
-				dimlist, _ := member.GetChild("DimList")
-				dims, _ := dimlist.GetChildLink("intNum")
-				for _, dim := range dims {
-					t += dim.Value + " "
-				}
-				n, _ := member.GetChild("id")
-				paramNames = append(paramNames, n.Token.Lexeme)
-				types = append(types, t)
-			}
+		id := funcDef.GetChild("id")
+		funcName := id.Token.Lexeme
+
+		fpMembers := funcDef.GetChild("FparamList").GetChildLink("FparamMember")
+		if len(fpMembers) == 0 {
 			classTable.addEntry(funcName, "function", retType, true)
-			for _, x := range classTable.getEntries() {
-				if x.name == funcName {
-					x.child.populateFuncTable(paramNames, paramNames, types)
-				}
+			classTable.populateTableWithFuncVars(funcDef, funcName, paramNames, types)
+			continue
+		}
+		for _, member := range fpMembers {
+			t := member.Token.Type + " "
+			dims := member.GetChild("DimList").GetChildLink("intNum")
+			for _, dim := range dims {
+				t += dim.Value + " "
 			}
+			paramNames = append(paramNames, member.GetChild("id").Token.Lexeme)
+			types = append(types, t)
 		}
+		classTable.addEntry(funcName, "function", retType, true)
+		classTable.populateTableWithFuncVars(funcDef, funcName, paramNames, types)
 	}
 	return nil
 }
 
-func (t *table) populateFuncTable(names, kinds, types []string) error {
+func (t *table) populateTableWithFuncVars(funcDef *Syn.Node, funcName string, paramNames, types []string) {
+	for _, x := range t.getEntries() {
+		if x.name == funcName {
+			x.child.populateTable(paramNames, "parameter", types)
+			paramNames, types, err := funcDef.GetFuncVars()
+			if err != nil {
+				continue
+			}
+			x.child.populateTable(paramNames, "variable", types)
+		}
+	}
+}
+
+func (t *table) populateTable(names []string, kind string, types []string) error {
 	for k := range names {
-		t.addEntry(names[k], "parameter", types[k], false)
+		if len(types) < k {
+			t.addEntry(names[k], kind, "", true)
+		} else {
+			t.addEntry(names[k], kind, types[k], true)
+		}
 	}
 	return nil
 }
 
-func (a *Analyzer) addFreeFuncs() error {
-	funcDefList, err := a.rootNode.GetChildLink("FuncDef")
-	if err != nil {
-		return fmt.Errorf("could not find funcDef")
+func (a *Analyzer) addFreeFuncs() (errors []error) {
+	funcDefList := a.rootNode.GetChildLink("FuncDef")
+	if len(funcDefList) == 0 {
+		return nil
 	}
+
 	for _, funcDef := range funcDefList {
-		scope, err := funcDef.GetChild("Scope")
-		if err != nil {
-			return fmt.Errorf("could not find scope")
-		}
+		scope := funcDef.GetChild("Scope")
 		if scope.Value != "EPSILON" {
 			continue
 		}
-		kind := "function"
 		name := scope.Token.Lexeme
-		x, err := funcDef.GetChild("Type")
-		if err != nil {
-			return fmt.Errorf("could not find Type")
-		}
-		retType := x.Token.Type
+		retType := funcDef.GetChild("Type").Token.Type
 		paramNames := make([]string, 0)
 		types := make([]string, 0)
 
-		fplist, err := funcDef.GetChild("FparamList")
-		if err != nil {
-			a.table.addEntry(name, kind, retType, true)
-			a.populateFreeFuncTables(name, paramNames, paramNames, types)
-			// add the func with no params and no new table TODO************
-
-			return nil
+		fplist := funcDef.GetChild("FparamList")
+		if fplist.Token == nil {
+			a.table.addEntry(name, "function", retType, true)
+			for _, entry := range a.table.getEntries() {
+				if entry.name == name {
+					names, types, _ := funcDef.GetFuncVars()
+					entry.child.populateTable(names, "variable", types)
+				}
+			}
+			// a.populateFreeFuncTables(name, paramNames, paramNames, types)
+			continue
 		}
 
-		fpMembers, err := fplist.GetChildLink("FparamMember")
-		if err != nil {
-			a.table.addEntry(name, kind, retType, true)
-			a.populateFreeFuncTables(name, paramNames, paramNames, types)
-			// add the func with no params and no new table TODO************
-			return nil
+		fpMembers := fplist.GetChildLink("FparamMember")
+		if len(fpMembers) == 0 {
+			a.table.addEntry(name, "function", retType, true)
+			for _, entry := range a.table.getEntries() {
+				if entry.name == name {
+					// entry.child.populateTable([]string{name}, "parameter", types)
+					names, types, _ := funcDef.GetFuncVars()
+					entry.child.populateTable(names, "variable", types)
+				}
+			}
+			// a.populateFreeFuncTables(name, paramNames, paramNames, types)
+			continue
 		}
 
 		for _, member := range fpMembers {
 			t := member.Token.Type + " "
-			dimlist, _ := member.GetChild("DimList")
-			dims, _ := dimlist.GetChildLink("intNum")
+			dims := member.GetChild("DimList").GetChildLink("intNum")
 			for _, dim := range dims {
 				t += dim.Value + " "
 			}
-			n, _ := member.GetChild("id")
-			paramNames = append(paramNames, n.Token.Lexeme)
+			paramNames = append(paramNames, member.GetChild("id").Token.Lexeme)
 			types = append(types, t)
 		}
-		a.table.addEntry(name, kind, retType, true)
-		a.populateFreeFuncTables(name, paramNames, paramNames, types)
+		a.table.addEntry(name, "function", retType, true)
+		for _, entry := range a.table.getEntries() {
+			if entry.name == name {
+				entry.child.populateTable([]string{name}, "parameter", types)
+				names, types, _ := funcDef.GetFuncVars()
+				entry.child.populateTable(names, "variable", types)
+			}
+		}
+		// a.populateFreeFuncTables(name, paramNames, paramNames, types)
+
 	}
 	return nil
 }
@@ -189,25 +277,87 @@ func (a *Analyzer) populateFreeFuncTables(funcName string, names, kind, types []
 	}
 }
 
-func (a *Analyzer) createTables() error {
-	classList, err := a.rootNode.GetChildLink("ClassMember")
-	if err == nil {
-		for _, class := range classList {
-			_type := ""
-			name := class.Token.Lexeme
-			InheritListParent, nil := class.GetChild("InheritList")
-			list, err := InheritListParent.GetChildLink("InheritListMember")
-			if err == nil {
-				for k := range list {
-					if k == len(list)-1 {
-						_type += list[k].Token.Lexeme
-						continue
-					}
-					_type += list[k].Token.Lexeme + " "
-				}
+func (a *Analyzer) createClasses() (errors []error) {
+	classList := a.rootNode.GetChildLink("ClassMember")
+	if len(classList) == 0 {
+		return errors
+	}
+	var _typeList []string
+	var nameList []string
+	// GetClasses
+	for _, class := range classList {
+		_type := ""
+		name := class.Token.Lexeme
+		list := class.GetChild("InheritList").GetChildLink("InheritListMember")
+		for k := range list {
+			if k == len(list)-1 {
+				_type += list[k].Token.Lexeme
+				continue
 			}
-			a.table.addEntry(name, "class", _type, true)
+			_type += list[k].Token.Lexeme + " "
+		}
+		_typeList = append(_typeList, _type)
+		nameList = append(nameList, name)
+		duplicateClasses := getDuplicates(nameList)
+		for _, dup := range duplicateClasses {
+			errors = append(errors, fmt.Errorf("Class %s declared twice", dup))
 		}
 	}
+	//Add classes
+	a.table.populateTable(nameList, "class", _typeList)
+
+	//Get Variables
+	for _, class := range classList {
+		_typeList, nameList = []string{}, []string{}
+		members := class.GetChildLink("MemberList")
+		if len(members) == 0 {
+			continue
+		}
+		for _, member := range members {
+			vars := member.GetChildLink("VarDecl")
+			if len(vars) == 0 {
+				continue
+			}
+			for _, variable := range vars {
+				_type := variable.GetChild("Type").Token.Lexeme + " "
+				dims := variable.GetChild("DimList").GetChildLink("intNum")
+				for _, dim := range dims {
+					_type += dim.Value + " "
+				}
+				_typeList = append(_typeList, _type)
+				nameList = append(nameList, variable.GetChild("id").Token.Lexeme)
+				duplicateVariables := getDuplicates(nameList)
+				for _, dup := range duplicateVariables {
+					errors = append(errors, fmt.Errorf("variable %s declared twice in class %s", dup, class.Token.Lexeme))
+				}
+			}
+		}
+
+		a.table.findTable(class.Token.Lexeme).populateTable(nameList, "variable", _typeList)
+	}
 	return nil
+}
+
+func getDuplicates(a []string) (d []string) {
+	m := make(map[string]bool)
+	for _, v := range a {
+		if m[v] {
+			d = append(d, v)
+			continue
+		}
+		m[v] = true
+	}
+	return
+}
+
+func removeDuplicates(a []error) (d []error) {
+	m := make(map[string]bool)
+	for _, v := range a {
+		if m[v.Error()] {
+			continue
+		}
+		d = append(d, v)
+		m[v.Error()] = true
+	}
+	return
 }

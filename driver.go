@@ -60,6 +60,9 @@ func main() {
 	}
 
 	tableAnalyzer := Sem.CreateAnalyzer(rootNode)
-	err = tableAnalyzer.CreateTables()
+	errs = tableAnalyzer.CreateTables()
+	for _, v := range errs {
+		fmt.Println(v)
+	}
 
 }
