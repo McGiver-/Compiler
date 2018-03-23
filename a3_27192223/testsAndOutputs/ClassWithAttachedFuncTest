@@ -1,0 +1,12 @@
+class Utility {
+ float who[2][3];
+ int member1;};
+ class Other {
+ Family ties[2];};
+int Utility::findMax(int param1[3][111]){
+ float am[2][3];
+};
+float randomize(){
+};
+program {
+};

@@ -1,0 +1,14 @@
+(*Sem.table)(0xc420010ce0)({
+ parent: (*Sem.table)(<nil>),
+ entries: ([]*Sem.entry) (len=1 cap=1) {
+  (*Sem.entry)(0xc42000a700)({
+   name: (string) (len=9) "randomize",
+   kind: (string) (len=8) "function",
+   _type: (string) (len=5) "float",
+   child: (*Sem.table)(0xc420010d00)({
+    parent: (*Sem.table)(0xc420010ce0)(<already shown>),
+    entries: ([]*Sem.entry) <nil>
+   })
+  })
+ }
+})

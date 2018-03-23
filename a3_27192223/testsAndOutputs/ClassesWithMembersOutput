@@ -1,0 +1,61 @@
+(*Sem.table)(0xc420011be0)({
+ parent: (*Sem.table)(<nil>),
+ entries: ([]*Sem.entry) (len=3 cap=4) {
+  (*Sem.entry)(0xc42000a9c0)({
+   name: (string) (len=7) "Utility",
+   kind: (string) (len=5) "class",
+   _type: (string) "",
+   child: (*Sem.table)(0xc420011c40)({
+    parent: (*Sem.table)(0xc420011be0)(<already shown>),
+    entries: ([]*Sem.entry) (len=2 cap=2) {
+     (*Sem.entry)(0xc42000aa40)({
+      name: (string) (len=3) "who",
+      kind: (string) (len=8) "variable",
+      _type: (string) (len=10) "float 2 3 ",
+      child: (*Sem.table)(0xc420011cc0)({
+       parent: (*Sem.table)(0xc420011c40)(<already shown>),
+       entries: ([]*Sem.entry) <nil>
+      })
+     }),
+     (*Sem.entry)(0xc42000aa80)({
+      name: (string) (len=7) "member1",
+      kind: (string) (len=8) "variable",
+      _type: (string) (len=4) "int ",
+      child: (*Sem.table)(0xc420011ce0)({
+       parent: (*Sem.table)(0xc420011c40)(<already shown>),
+       entries: ([]*Sem.entry) <nil>
+      })
+     })
+    }
+   })
+  }),
+  (*Sem.entry)(0xc42000aa00)({
+   name: (string) (len=5) "Other",
+   kind: (string) (len=5) "class",
+   _type: (string) "",
+   child: (*Sem.table)(0xc420011c60)({
+    parent: (*Sem.table)(0xc420011be0)(<already shown>),
+    entries: ([]*Sem.entry) (len=1 cap=1) {
+     (*Sem.entry)(0xc42000aac0)({
+      name: (string) (len=4) "ties",
+      kind: (string) (len=8) "variable",
+      _type: (string) (len=9) "Family 2 ",
+      child: (*Sem.table)(0xc420011d00)({
+       parent: (*Sem.table)(0xc420011c60)(<already shown>),
+       entries: ([]*Sem.entry) <nil>
+      })
+     })
+    }
+   })
+  }),
+  (*Sem.entry)(0xc42000ab00)({
+   name: (string) (len=9) "randomize",
+   kind: (string) (len=8) "function",
+   _type: (string) (len=5) "float",
+   child: (*Sem.table)(0xc420011d20)({
+    parent: (*Sem.table)(0xc420011be0)(<already shown>),
+    entries: ([]*Sem.entry) <nil>
+   })
+  })
+ }
+})

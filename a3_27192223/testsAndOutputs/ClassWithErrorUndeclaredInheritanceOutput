@@ -1,0 +1,43 @@
+(*Sem.table)(0xc4200117c0)({
+ parent: (*Sem.table)(<nil>),
+ entries: ([]*Sem.entry) (len=2 cap=2) {
+  (*Sem.entry)(0xc42000a980)({
+   name: (string) (len=7) "Utility",
+   kind: (string) (len=5) "class",
+   _type: (string) (len=5) "Other",
+   child: (*Sem.table)(0xc4200117e0)({
+    parent: (*Sem.table)(0xc4200117c0)(<already shown>),
+    entries: ([]*Sem.entry) (len=2 cap=2) {
+     (*Sem.entry)(0xc42000a9c0)({
+      name: (string) (len=3) "who",
+      kind: (string) (len=8) "variable",
+      _type: (string) (len=10) "float 2 3 ",
+      child: (*Sem.table)(0xc420011840)({
+       parent: (*Sem.table)(0xc4200117e0)(<already shown>),
+       entries: ([]*Sem.entry) <nil>
+      })
+     }),
+     (*Sem.entry)(0xc42000aa00)({
+      name: (string) (len=7) "member1",
+      kind: (string) (len=8) "variable",
+      _type: (string) (len=4) "int ",
+      child: (*Sem.table)(0xc420011860)({
+       parent: (*Sem.table)(0xc4200117e0)(<already shown>),
+       entries: ([]*Sem.entry) <nil>
+      })
+     })
+    }
+   })
+  }),
+  (*Sem.entry)(0xc42000aa40)({
+   name: (string) (len=9) "randomize",
+   kind: (string) (len=8) "function",
+   _type: (string) (len=5) "float",
+   child: (*Sem.table)(0xc420011880)({
+    parent: (*Sem.table)(0xc4200117c0)(<already shown>),
+    entries: ([]*Sem.entry) <nil>
+   })
+  })
+ }
+})
+class :Other inheritied and not declared

@@ -1,0 +1,82 @@
+(*Sem.table)(0xc420011e20)({
+ parent: (*Sem.table)(<nil>),
+ entries: ([]*Sem.entry) (len=3 cap=4) {
+  (*Sem.entry)(0xc42000a7c0)({
+   name: (string) (len=7) "Utility",
+   kind: (string) (len=5) "class",
+   _type: (string) "",
+   child: (*Sem.table)(0xc420011ea0)({
+    parent: (*Sem.table)(0xc420011e20)(<already shown>),
+    entries: ([]*Sem.entry) (len=3 cap=4) {
+     (*Sem.entry)(0xc42000a8c0)({
+      name: (string) (len=3) "who",
+      kind: (string) (len=8) "variable",
+      _type: (string) (len=10) "float 2 3 ",
+      child: (*Sem.table)(0xc420011f60)({
+       parent: (*Sem.table)(0xc420011ea0)(<already shown>),
+       entries: ([]*Sem.entry) <nil>
+      })
+     }),
+     (*Sem.entry)(0xc42000a900)({
+      name: (string) (len=4) "dup1",
+      kind: (string) (len=8) "variable",
+      _type: (string) (len=4) "int ",
+      child: (*Sem.table)(0xc420011f80)({
+       parent: (*Sem.table)(0xc420011ea0)(<already shown>),
+       entries: ([]*Sem.entry) <nil>
+      })
+     }),
+     (*Sem.entry)(0xc42000a940)({
+      name: (string) (len=4) "dup1",
+      kind: (string) (len=8) "variable",
+      _type: (string) (len=4) "int ",
+      child: (*Sem.table)(0xc420011fa0)({
+       parent: (*Sem.table)(0xc420011ea0)(<already shown>),
+       entries: ([]*Sem.entry) <nil>
+      })
+     })
+    }
+   })
+  }),
+  (*Sem.entry)(0xc42000a800)({
+   name: (string) (len=7) "Utility",
+   kind: (string) (len=5) "class",
+   _type: (string) "",
+   child: (*Sem.table)(0xc420011ec0)({
+    parent: (*Sem.table)(0xc420011e20)(<already shown>),
+    entries: ([]*Sem.entry) <nil>
+   })
+  }),
+  (*Sem.entry)(0xc42000a980)({
+   name: (string) (len=9) "randomize",
+   kind: (string) (len=8) "function",
+   _type: (string) (len=5) "float",
+   child: (*Sem.table)(0xc420011fe0)({
+    parent: (*Sem.table)(0xc420011e20)(<already shown>),
+    entries: ([]*Sem.entry) (len=2 cap=2) {
+     (*Sem.entry)(0xc42000a9c0)({
+      name: (string) (len=10) "duplicate1",
+      kind: (string) (len=8) "variable",
+      _type: (string) (len=4) "int ",
+      child: (*Sem.table)(0xc420142060)({
+       parent: (*Sem.table)(0xc420011fe0)(<already shown>),
+       entries: ([]*Sem.entry) <nil>
+      })
+     }),
+     (*Sem.entry)(0xc42000aa00)({
+      name: (string) (len=10) "duplicate1",
+      kind: (string) (len=8) "variable",
+      _type: (string) (len=4) "int ",
+      child: (*Sem.table)(0xc420142080)({
+       parent: (*Sem.table)(0xc420011fe0)(<already shown>),
+       entries: ([]*Sem.entry) <nil>
+      })
+     })
+    }
+   })
+  })
+ }
+})
+variable: dup1 declared twice in class: Utility
+class: Utility declared twice in global scope
+variable: duplicate1 declared twice in function: randomize

@@ -1,0 +1,44 @@
+(*Sem.table)(0xc4200117a0)({
+ parent: (*Sem.table)(<nil>),
+ entries: ([]*Sem.entry) (len=2 cap=2) {
+  (*Sem.entry)(0xc42000a940)({
+   name: (string) (len=7) "Utility",
+   kind: (string) (len=5) "class",
+   _type: (string) (len=5) "Other",
+   child: (*Sem.table)(0xc420011800)({
+    parent: (*Sem.table)(0xc4200117a0)(<already shown>),
+    entries: ([]*Sem.entry) (len=1 cap=1) {
+     (*Sem.entry)(0xc42000a9c0)({
+      name: (string) (len=3) "var",
+      kind: (string) (len=8) "variable",
+      _type: (string) (len=10) "float 2 3 ",
+      child: (*Sem.table)(0xc420011840)({
+       parent: (*Sem.table)(0xc420011800)(<already shown>),
+       entries: ([]*Sem.entry) <nil>
+      })
+     })
+    }
+   })
+  }),
+  (*Sem.entry)(0xc42000a980)({
+   name: (string) (len=5) "Other",
+   kind: (string) (len=5) "class",
+   _type: (string) "",
+   child: (*Sem.table)(0xc420011820)({
+    parent: (*Sem.table)(0xc4200117a0)(<already shown>),
+    entries: ([]*Sem.entry) (len=1 cap=1) {
+     (*Sem.entry)(0xc42000aa00)({
+      name: (string) (len=3) "var",
+      kind: (string) (len=8) "variable",
+      _type: (string) (len=10) "float 2 3 ",
+      child: (*Sem.table)(0xc420011860)({
+       parent: (*Sem.table)(0xc420011820)(<already shown>),
+       entries: ([]*Sem.entry) <nil>
+      })
+     })
+    }
+   })
+  })
+ }
+})
+Warning shadowing var from class Other in class Utility

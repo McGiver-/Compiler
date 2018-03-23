@@ -1,0 +1,167 @@
+/*-----------------------------------------------------------------------------------------------------------*/
+  /*                                            GRAMMAR                                                        */
+  /*-----------------------------------------------------------------------------------------------------------*/
+  
+   Prog              -> @ClassListAndFuncDefList ProgBody @ProgBody | FuncDef Prog | ClassDecl  Prog 
+   ProgBody          -> program FuncBody ;
+   FuncDef           -> FuncHead FuncBody @FuncDef ;
+   FuncBody          -> { FuncVarDecl @StatBlock }
+   ClassDecl         -> class id @id Inherit @InheritList { ClassVarDecl @MemberList } @ClassMember ; 
+   ClassVarDecl      -> Decl ClassVarDeclTail 
+                      | EPSILON @EPSILON
+   Type              -> float @float | id @id | int @int
+   Decl              -> Type @Type id @id
+   ClassVarDeclTail  -> ArraySizeTail ; @DimList @VarDecl ClassVarDecl 
+                      | FuncDecl 
+   FuncVarDecl       -> StatementNoAssign StatementTail 
+                      | Type @Type FuncVarDeclTail @StatOrVarDecl 
+                      | EPSILON 
+   FuncVarDeclTail   -> id @id ArraySizeTail @DimList @VarDecl ; FuncVarDecl 
+                      | VariableTail @Var AssignStatTail @AssignStat ; StatementTail    
+   Variable          -> id @id VariableTail 
+   VariableTail      -> VarNest | VarIndiceTail 
+   VarIndiceTail     -> Indice VariableTail 
+                      | EPSILON 
+   VarNest           -> . Variable
+   FParamsTail       -> , FParams | EPSILON 
+   ProgBody          -> program FuncBody ; 
+   Inherit           -> : id @id @InheritListMember InheritList | EPSILON 
+   InheritList       -> , id @id @InheritListMember InheritList | EPSILON 
+   FuncDefList       -> Decl FuncDefListTail 
+                      | EPSILON
+   FuncDefListTail   -> FuncDef FuncDefList 
+   FuncDecl	         -> ( FParams @FparamList ) ; @FuncDecl ClassVarDecl	
+   ArraySize         -> [ intNum @intNum ] 
+   ArraySizeTail     -> ArraySize ArraySizeTail 
+                      | EPSILON 
+   FuncHead          -> Type @Type id @id FuncHeadTail 
+   FuncHeadTail      -> @ScopeSpec sr id @id  ( FParams @FparamList ) | @EmptyScope ( FParams @FparamList ) 
+                      | EPSILON  /// i think this shouldnt be here 
+   FParams           -> Type @Type id @id ArraySizeTail @DimList @FparamMember FParamsTail 
+                      | EPSILON 
+   AssignStat        -> Variable AssignStatTail 
+   AssignStatTail    -> AssignOp Expr 
+   Statement         -> AssignStat ; | StatementNoAssign 
+   StatementTail     -> Statement StatementTail 
+                      | EPSILON 
+   StatementNoAssign -> for ( Decl AssignOp Expr ; RelExpr ; AssignStat ) StatBlock ; 
+                      | if ( Expr ) then StatBlock else StatBlock ; 
+                      | get ( Variable ) ; 
+                      | put ( Expr ) ; 
+                      | return ( Expr ) ; 
+   StatBlock         -> { StatementTail } | Statement 
+                      | EPSILON 
+   Expr              -> ArithExpr RelExprTail 
+   RelExpr           -> ArithExpr RelOp @RelOp ArithExpr @RelExpr
+   RelExprTail       -> RelOp @RelOp ArithExpr @RelExpr | EPSILON 
+   ArithExpr         -> Term @Term ArithExprTail 
+   ArithExprTail     -> AddOp @AddOp Term @Term @ArithExpr ArithExprTail 
+                      | EPSILON 
+   Term              -> Factor TermTail 
+   TermTail          -> MultOp Factor TermTail 
+                      | EPSILON 
+   Factor            -> ( ArithExpr ) | not Factor @NotFactor | EvalExprHead 
+                      | Num @Num | Sign Factor @SignFactor
+   Num               -> floatNum @floatNum | intNum @intNum
+   Sign              -> + @+ | - @-
+   EvalExprHead      -> id EvalExprTail 
+   EvalExprTail      -> FunctionCallExpr | EvalIndiceTail 
+   EvalIndiceHead    -> Indice EvalIndiceTail 
+   EvalIndiceTail    -> EvalNestHead | EvalIndiceHead 
+                      | EPSILON 
+   EvalNestHead      -> . EvalExprHead 
+   
+   FunctionCallExpr  -> ( AParams @Aparams ) 
+   Indice            -> [ ArithExpr ] 
+   ArraySize         -> [ intNum @DimList] 
+   ArraySizeTail     -> ArraySize ArraySizeTail 
+                      | EPSILON 
+   Type              -> float @float| id @id | int @int
+   AParams           -> Expr @Expr AParamsTail | EPSILON 
+   AParamsTail       -> , AParams | EPSILON 
+   AssignOp          -> = 
+   RelOp             -> eq @eq | geq @geq | gt @gt | leq @leq | lt @lt | neq @neq
+   AddOp             -> + @+ | - @- | or @or
+   MultOp            -> * | / | and 
+
+  /*-----------------------------------------------------------------------------------------------------------*/
+  /*                                            FIRST AND FOLLOW SETS                                          */
+  /*-----------------------------------------------------------------------------------------------------------*/
+
+FIRST(Prog) = {float,id,int,class,program} 
+FIRST(ProgBody) = {program}	
+FIRST(ClassDecl) = {class} 
+FIRST(Inherit) = {EPSILON,:}
+FIRST(InheritList) = {EPSILON,,}	
+FIRST(ClassVarDecl) = {EPSILON,float,id,int}	
+FIRST(Decl) = {float,id,int} 
+FIRST(ClassVarDeclTail) = {(,[,;} 
+FIRST(FundHead) = {float,id,int}  
+FIRST(FuncHeadTail) = {EPSILON,(,sr} 
+FIRST(FuncBody) = {{} 
+FIRST(FuncDecl) = {(} 
+FIRST(FuncVarDecl) = {EPSILON,float,id,int,for,if,get,put,return} 
+FIRST(FuncVarDeclTail) = {[,.,=,id} 
+FIRST(ArraySize) = {[} 
+FIRST(ArraySizeTail) = {EPSILON,[} 
+FIRST(Type) = {int,id,float} 
+FIRST(FParams) = {EPSILON,float,id,int} 
+FIRST(FParamsTail) = {EPSILON,,} 
+FIRST(FuncDefList) = {EPSILON,float,id,int} 
+FIRST(FuncDefListTail) = {float,id,int} 
+FIRST(FuncDef) = {float,id,int} 
+FIRST(AssignStat) = {id} 
+FIRST(AssignStatTail) = {=} 
+FIRST(Statement) = {for,if,get,put,return,id}
+FIRST(StatementTail) = {EPSILON,id,for,if,get,put,return} 
+FIRST(StatementNoAssign) = {return,put,get,if,for} 
+FIRST(StatBlock) = {EPSILON,id,for,if,get,put,return,{} 
+FIRST(Expr) = {(,not,floatNum,intNum,id,+,-} 
+FIRST(RelExpr) = {(,not,floatNum,intNum,id,+,-} 
+FIRST(RelExprTail) = {EPSILON,eq,geq,gt,leq,lt,neq} 
+FIRST(ArithExpr) = {(,not,floatNum,intNum,id,+,-} 
+FIRST(ArithExprTail) = {EPSILON,+,-,or} 
+FIRST(Term) = {(,not,floatNum,intNum,id,+,-} 
+FIRST(TermTail) = {EPSILON,*,/,and} 
+FIRST(Factor) = {+,-.id,floatNum,intNum,not,(} 
+FIRST(Num) = {intNum,floatNum} 
+FIRST(Sign) = {+,-} 
+FIRST(EvalExprHead) = {id} 
+FIRST(EvalExprTail) = {EPSILON,(,.,[} 
+FIRST(EvalIndiceHead) = {[} 
+FIRST(EvalIndiceTail) = {EPSILON,[,.}
+FIRST(EvalNestHead) = {.} 
+FIRST(Variable) = {id}
+FIRST(VariableTail) = {EPSILON,.,[}
+FIRST(VarIndiceTail) = {EPSILON,[}
+FIRST(VarNest) = {.}
+FIRST(FunctionCallExpr) = {(} 
+FIRST(Indice) = {[} 
+FIRST(AParams) = {EPSILON,(,not,floatNum,intNum,id,+,-} 
+FIRST(AParamsTail) = {EPSILON,,}
+FIRST(AssignOp) = {=}
+FIRST(RelOp) = {neq,lt,leq,gt,geq,eq}
+FIRST(AddOp) = {or,-.+}
+FIRST(MultOp) = {and,/,*}
+
+FOLLOW(Inherit) = {{}
+FOLLOW(InheritList) = {{}
+FOLLOW(ClassVarDecl) = {}}
+FOLLOW(FuncHeadTail) = {{}
+FOLLOW(FuncVarDecl) = {}}
+FOLLOW(ArraySizeTail) = {;,),,}
+FOLLOW(FParams) = {)}
+FOLLOW(FParamsTail) = {)}
+FOLLOW(FuncDefList) = {$}
+FOLLOW(StatementTail) = {}}
+FOLLOW(StatBlock) = {;,else}
+FOLLOW(RelExprTail) = {;,),,}
+FOLLOW(ArithExprTail) = {;,),,,eq,geq,gt,leq,lt,neq,]}
+FOLLOW(TermTail) = {;,),,,eq,geq,gt,leq,lt,neq,],+,-,or}
+FOLLOW(EvalExprTail) = {;, ), ,, eq, geq, gt, leq, lt, neq, ], +, -, or, *, /, and}
+FOLLOW(EvalIndiceTail) = {;, ), ,, eq, geq, gt, leq, lt, neq, ], +, -, or, *, /, and}
+FOLLOW(VariableTail) = {=,)}
+FOLLOW(VariableIndiceTail) = {=,)}
+FOLLOW(AParams) = {)}
+FOLLOW(AParamsTail) = {)}
+

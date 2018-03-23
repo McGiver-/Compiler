@@ -1,0 +1,15 @@
+To compile the program a go compiler is needed. Run go build -0 Compiler and it will create a binary for the system you are on.
+I have also submitted a linux runnable binary called Compiler. To run the binary do ./Compiler <codeFile> <atocOutputfile> <errorsFile>.
+
+All the tasks for symbol table creation phase were completed. It should be noted that the global table has no name. There is a pointer
+to parent table in each table. Table name is not represented in the current table rather you get it from the name of the entry in the parent
+table that refers to to the current table.
+Errors are reported to standard out with the full symbol table. The symbol table was printed using the tool go-spew.
+Shadow warnings and multiple declaration errors are reported including multiple class declararion and missing class declararion for inherited classes.
+
+I implemented a findTable method that can be run on any table and will find the specified table if it is a child of the current table.
+This makes traversal very easy. I also wrote a populate table method that takes entries. Therefore once you have acquired the 
+correct information from your ast example if you get all the members of a certain class than you mere do globalTable.findTable(ClassName).populateTable(entries).
+I also have a checkDuplicates that searches for duplicates in all the current tables.
+
+I used go delve for debugging the program

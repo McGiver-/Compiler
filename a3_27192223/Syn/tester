@@ -1,0 +1,19 @@
+class Utility : Other, More{
+ float who[2][3];
+ int member1;};
+ class Other {
+ Family ties[2];};
+ class More {
+int member1;
+ Friends me[2][3];
+ };
+int Utility::findMax(){
+ float am[2][3];
+};
+int Utility::findMin(int array[100],float some[23][23][23][23]){
+ float i[2][3];
+};
+float randomize(){
+};
+program {
+}; 

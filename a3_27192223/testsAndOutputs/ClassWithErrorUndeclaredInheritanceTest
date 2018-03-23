@@ -1,0 +1,7 @@
+class Utility : Other{
+ float who[2][3];
+ int member1;};
+float randomize(){
+};
+program {
+};

@@ -1,0 +1,24 @@
+(*Sem.table)(0xc420011140)({
+ parent: (*Sem.table)(<nil>),
+ entries: ([]*Sem.entry) (len=1 cap=1) {
+  (*Sem.entry)(0xc42000a8c0)({
+   name: (string) (len=9) "randomize",
+   kind: (string) (len=8) "function",
+   _type: (string) (len=5) "float",
+   child: (*Sem.table)(0xc420011160)({
+    parent: (*Sem.table)(0xc420011140)(<already shown>),
+    entries: ([]*Sem.entry) (len=1 cap=1) {
+     (*Sem.entry)(0xc42000a900)({
+      name: (string) (len=9) "randomize",
+      kind: (string) (len=9) "parameter",
+      _type: (string) (len=8) "int 1 2 ",
+      child: (*Sem.table)(0xc420011180)({
+       parent: (*Sem.table)(0xc420011160)(<already shown>),
+       entries: ([]*Sem.entry) <nil>
+      })
+     })
+    }
+   })
+  })
+ }
+})

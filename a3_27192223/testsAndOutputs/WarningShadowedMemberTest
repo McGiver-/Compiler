@@ -1,0 +1,8 @@
+class Utility : Other {
+ float var[2][3];
+ };
+ class Other {
+ float var[2][3];
+ };
+program {
+};
