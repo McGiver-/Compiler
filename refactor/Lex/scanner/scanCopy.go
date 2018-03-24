@@ -284,11 +284,11 @@ func (s *Scanner) scanMantissa(base int) {
 func (s *Scanner) scanNumber(seenDecimalPoint bool) (token.Token, string) {
 	// digitVal(s.ch) < 10
 	offs := s.offset
-	tok := token.INT
+	tok := token.INTNUM
 
 	if seenDecimalPoint {
 		offs--
-		tok = token.FLOAT
+		tok = token.FLOATNUM
 		s.scanMantissa(10)
 		goto exponent
 	}
@@ -330,14 +330,14 @@ func (s *Scanner) scanNumber(seenDecimalPoint bool) (token.Token, string) {
 
 fraction:
 	if s.ch == '.' {
-		tok = token.FLOAT
+		tok = token.FLOATNUM
 		s.next()
 		s.scanMantissa(10)
 	}
 
 exponent:
 	if s.ch == 'e' || s.ch == 'E' {
-		tok = token.FLOAT
+		tok = token.FLOATNUM
 		s.next()
 		if s.ch == '-' || s.ch == '+' {
 			s.next()

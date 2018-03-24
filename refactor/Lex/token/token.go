@@ -15,11 +15,11 @@ const (
 	literal_beg
 	// Identifiers and basic type literals
 	// (these tokens stand for classes of literals)
-	IDENT  // main
-	INT    // 12345
-	FLOAT  // 123.45
-	CHAR   // 'a'
-	STRING // "abc"
+	IDENT    // main
+	INTNUM   // 12345
+	FLOATNUM // 123.45
+	CHAR     // 'a'
+	STRING   // "abc"
 	literal_end
 
 	operator_beg
@@ -54,16 +54,20 @@ const (
 
 	keyword_beg
 	// Keywords
-	THEN   // then
-	ELSE   // else
-	FOR    // for
-	AND    // and
-	OR     // or
-	NOT    // not
-	PUT    // put
-	GET    // get
-	IF     // if
-	RETURN // return
+	PROGRAM // program
+	CLASS   // class
+	INT     // int
+	FLOAT   // float
+	THEN    // then
+	ELSE    // else
+	FOR     // for
+	AND     // and
+	OR      // or
+	NOT     // not
+	PUT     // put
+	GET     // get
+	IF      // if
+	RETURN  // return
 
 	keyword_end
 )
@@ -74,11 +78,11 @@ var tokens = [...]string{
 	EOF:     "EOF",
 	COMMENT: "COMMENT",
 
-	IDENT:  "IDENT",
-	INT:    "INT",
-	FLOAT:  "FLOAT",
-	CHAR:   "CHAR",
-	STRING: "STRING",
+	IDENT:    "IDENT",
+	INTNUM:   "INTNUM",
+	FLOATNUM: "FLOATNUM",
+	CHAR:     "CHAR",
+	STRING:   "STRING",
 
 	ADD: "+",
 	SUB: "-",
@@ -111,13 +115,17 @@ var tokens = [...]string{
 	SR:        "::",
 	COLON:     ":",
 
-	THEN:   "then",
-	PUT:    "put",
-	GET:    "get",
-	ELSE:   "else",
-	FOR:    "for",
-	IF:     "if",
-	RETURN: "return",
+	PROGRAM: "program",
+	CLASS:   "class",
+	INT:     "int",
+	FLOAT:   "float",
+	THEN:    "then",
+	PUT:     "put",
+	GET:     "get",
+	ELSE:    "else",
+	FOR:     "for",
+	IF:      "if",
+	RETURN:  "return",
 }
 
 // String returns the string corresponding to the token tok.
