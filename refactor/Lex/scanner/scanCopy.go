@@ -615,7 +615,7 @@ scanAgain:
 			if '0' <= s.ch && s.ch <= '9' {
 				insertSemi = true
 				tok, lit = s.scanNumber(true)
-			} else if s.ch == '.' {
+			} else {
 				tok = token.PERIOD
 				lit = "."
 			}

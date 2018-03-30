@@ -78,9 +78,9 @@ var tokens = [...]string{
 	EOF:     "EOF",
 	COMMENT: "COMMENT",
 
-	IDENT:    "IDENT",
-	INTNUM:   "INTNUM",
-	FLOATNUM: "FLOATNUM",
+	IDENT:    "id",
+	INTNUM:   "intNum",
+	FLOATNUM: "floatNum",
 	CHAR:     "CHAR",
 	STRING:   "STRING",
 

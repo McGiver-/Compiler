@@ -3,7 +3,7 @@ package Syn
 import (
 	"fmt"
 
-	"github.com/McGiver-/Compiler/Lex"
+	"github.com/McGiver-/Compiler/refactor/Lex"
 )
 
 type Node struct {
@@ -131,14 +131,14 @@ func (n *Node) GetFuncVars() ([]string, []string, error) {
 	for _, variable := range vars {
 		varname := variable.GetChild("id")
 		t := variable.GetChild("Type")
-		_type := t.Token.Lexeme + " "
+		_type := t.Token.Lit + " "
 		dimlist := variable.GetChild("DimList")
 		dims := dimlist.GetChildLink("intNum")
 		for _, dim := range dims {
 			_type += dim.Value + " "
 		}
 		types = append(types, _type)
-		names = append(names, varname.Token.Lexeme)
+		names = append(names, varname.Token.Lit)
 	}
 
 	if len(names) == 0 {
