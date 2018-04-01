@@ -134,10 +134,11 @@ func handleSemanticAction(action string, token *Lex.Token, stack *stackgo.Stack)
 		numberOfSubNodes, _ := strconv.Atoi(options[1])
 		var subNodes []*Node
 		for i := 0; i < numberOfSubNodes; i++ {
+			fmt.Printf("node poped is %s\n ", stack.Top().(*Node).Type)
 			subNodes = append([]*Node{stack.Pop().(*Node)}, subNodes...)
 		}
 		fmt.Printf("making family %s : %s\n", options[0], subNodes)
-		node := makeFamily(options[0], options[0], token, subNodes...)
+		node = makeFamily(options[0], options[0], token, subNodes...)
 		node.Token = node.LeftMostChild.Token
 	} else {
 		node = makeNode(options[0], options[0], token)

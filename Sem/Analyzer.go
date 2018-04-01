@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/McGiver-/Compiler/Syn"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Analyzer struct {
@@ -65,7 +64,7 @@ func (a *Analyzer) CreateTables() (errors []error) {
 	a.addFuncs()
 	errors = append(errors, a.inheritMembers()...)
 	errors = append(errors, a.table.findDuplicatesInTables()...)
-	spew.Dump(a.table)
+	// spew.Dump(a.table)
 	return removeDuplicates(errors)
 }
 

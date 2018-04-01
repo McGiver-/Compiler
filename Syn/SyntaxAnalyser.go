@@ -6,7 +6,6 @@ import (
 
 	"github.com/McGiver-/Compiler/Lex"
 	"github.com/alediaferia/stackgo"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type SynAnalyzer struct {
@@ -104,7 +103,6 @@ func (syn *SynAnalyzer) Parse() (errorList []error, rootNode *Node) {
 	}
 	sStack.Pop()
 	rootNode = sStack.Pop().(*Node)
-	fmt.Println(spew.Sdump(rootNode))
 	return
 }
 
@@ -190,7 +188,6 @@ func handleSemanticAction(action string, token *Lex.Token, stack *stackgo.Stack)
 			stack.Pop() // Poping EPSILON
 		}
 		statBlock := stack.Pop().(*Node)
-		fmt.Printf("statBlock is %v", statBlock)
 		fParamList := stack.Pop().(*Node)
 		id := stack.Pop().(*Node)
 		scopeSpec := stack.Pop().(*Node)
