@@ -7,7 +7,7 @@
    Prog              -> ProgBody @ProgBody @4:4 | FuncDef Prog | @ClassList ClassDecl Prog 
    ProgBody          -> program FuncBody ;
    FuncDef           -> FuncHead FuncBody @FuncDef @6:6 @2:1 ;
-   FuncBody          -> { FuncVarDecl @StatBlock }
+   FuncBody          -> { @StatBlock FuncVarDecl }
    ClassDecl         -> @ClassDecl class id @id @InheritList Inherit { @MemberList ClassVarDecl } @4:1 @2:1 ClassDecl; 
    ClassVarDecl      -> Decl ClassVarDeclTail 
                       | EPSILON @EPSILON @2:1
@@ -16,9 +16,9 @@
    ClassVarDeclTail  -> @VarDecl @DimList ArraySizeTail @4:3 @2:1 ; ClassVarDecl 
                       | FuncDecl 
    FuncVarDecl       -> StatementNoAssign StatementTail 
-                      | Type @Type FuncVarDeclTail @StatOrVarDecl 
+                      | Type @Type @2:2 FuncVarDeclTail 
                       | EPSILON 
-   FuncVarDeclTail   -> id @id @DimList ArraySizeTail @VarDecl ; FuncVarDecl 
+   FuncVarDeclTail   -> id @id @DimList ArraySizeTail @VarDecl @4:4 @2:1 ; FuncVarDecl 
                       | VariableTail @Var AssignStatTail @AssignStat ; StatementTail    
    Variable          -> id @id VariableTail 
    VariableTail      -> VarNest | VarIndiceTail 

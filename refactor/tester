@@ -1,7 +1,8 @@
 class Utility : More{
  float who[2][3];
  int member1;};
-int Utility::findMax(){
+int Utility::findMin(int array[100],float some[23][23][23][23]){
+ float i[2][3];
 };
 float randomize(){
 };
