@@ -37,17 +37,17 @@ func main() {
 	for _, err := range errs {
 		fmt.Printf("%v\n", err)
 	}
-	g := graph.NewGraph()
-	if err := g.SetName("ast"); err != nil {
-		panic(err)
-	}
-	if err := g.SetDir(true); err != nil {
-		panic(err)
-	}
+	// g := graph.NewGraph()
+	// if err := g.SetName("ast"); err != nil {
+	// 	panic(err)
+	// }
+	// if err := g.SetDir(true); err != nil {
+	// 	panic(err)
+	// }
 
-	g.AddNode("ast", rootNode.Token.Lit, nil)
-	makeGraph(rootNode, g)
-	fmt.Print(g.String())
+	// g.AddNode("ast", rootNode.Token.Lit, nil)
+	// makeGraph(rootNode, g)
+	// fmt.Print(g.String())
 }
 
 func makeGraph(n *Syn.Node, g *graph.Graph) {

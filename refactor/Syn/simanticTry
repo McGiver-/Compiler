@@ -2,21 +2,23 @@
   /*                                            GRAMMAR                                                        */
   /*-----------------------------------------------------------------------------------------------------------*/
   
-   Prog              -> @ClassListAndFuncDefList ProgBody @ProgBody | FuncDef Prog | ClassDecl  Prog 
+
+   Prog              -> @Prog @ClassList ClassDecl @FuncDefList FuncDef ProgBody @3:1
+   Prog              -> ProgBody @ProgBody @4:4 | FuncDef Prog | @ClassList ClassDecl Prog 
    ProgBody          -> program FuncBody ;
-   FuncDef           -> FuncHead FuncBody @FuncDef ;
+   FuncDef           -> FuncHead FuncBody @FuncDef @6:6 @2:1 ;
    FuncBody          -> { FuncVarDecl @StatBlock }
-   ClassDecl         -> class id @id Inherit @InheritList { ClassVarDecl @MemberList } @ClassMember ; 
+   ClassDecl         -> @ClassDecl class id @id @InheritList Inherit { @MemberList ClassVarDecl } @4:1 @2:1 ClassDecl; 
    ClassVarDecl      -> Decl ClassVarDeclTail 
-                      | EPSILON @EPSILON
+                      | EPSILON @EPSILON @2:1
    Type              -> float @float | id @id | int @int
-   Decl              -> Type @Type id @id
-   ClassVarDeclTail  -> ArraySizeTail ; @DimList @VarDecl ClassVarDecl 
+   Decl              -> Type @Type @2:2 id @id 
+   ClassVarDeclTail  -> @VarDecl @DimList ArraySizeTail @4:3 @2:1 ; ClassVarDecl 
                       | FuncDecl 
    FuncVarDecl       -> StatementNoAssign StatementTail 
                       | Type @Type FuncVarDeclTail @StatOrVarDecl 
                       | EPSILON 
-   FuncVarDeclTail   -> id @id ArraySizeTail @DimList @VarDecl ; FuncVarDecl 
+   FuncVarDeclTail   -> id @id @DimList ArraySizeTail @VarDecl ; FuncVarDecl 
                       | VariableTail @Var AssignStatTail @AssignStat ; StatementTail    
    Variable          -> id @id VariableTail 
    VariableTail      -> VarNest | VarIndiceTail 
@@ -25,19 +27,19 @@
    VarNest           -> . Variable
    FParamsTail       -> , FParams | EPSILON 
    ProgBody          -> program FuncBody ; 
-   Inherit           -> : id @id @InheritListMember InheritList | EPSILON 
-   InheritList       -> , id @id @InheritListMember InheritList | EPSILON 
+   Inherit           -> : id @id @2:1 InheritList | EPSILON 
+   InheritList       -> , id @id @2:1 InheritList | EPSILON 
    FuncDefList       -> Decl FuncDefListTail 
                       | EPSILON
    FuncDefListTail   -> FuncDef FuncDefList 
-   FuncDecl	         -> ( FParams @FparamList ) ; @FuncDecl ClassVarDecl	
-   ArraySize         -> [ intNum @intNum ] 
+   FuncDecl	         -> ( @FparamList FParams ) ; @FuncDecl ClassVarDecl	
+   ArraySize         -> [ intNum @intNum @2:1 ] 
    ArraySizeTail     -> ArraySize ArraySizeTail 
                       | EPSILON 
-   FuncHead          -> Type @Type id @id FuncHeadTail 
-   FuncHeadTail      -> @ScopeSpec sr id @id  ( FParams @FparamList ) | @EmptyScope ( FParams @FparamList ) 
+   FuncHead          -> Type @Type @2:2 @ScopeSpec id @id FuncHeadTail 
+   FuncHeadTail      -> @2:1 :: id @id  ( @FparamsList FParams ) | ( @FparamsList FParams ) 
                       | EPSILON  /// i think this shouldnt be here 
-   FParams           -> Type @Type id @id ArraySizeTail @DimList @FparamMember FParamsTail 
+   FParams           -> Type @Type @2:2 id @id @DimList ArraySizeTail @Fparam @4:4 @2:1 FParamsTail 
                       | EPSILON 
    AssignStat        -> Variable AssignStatTail 
    AssignStatTail    -> AssignOp Expr 

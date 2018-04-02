@@ -24,7 +24,7 @@ type noder interface {
 	set()
 }
 
-func (n *Node) makeSiblings(y ...*Node) *Node {
+func (n *Node) makeSiblings(y ...*Node) {
 	n.LeftMostSibling = n
 	xRight := n
 	yRight := y[0]
@@ -38,18 +38,15 @@ func (n *Node) makeSiblings(y ...*Node) *Node {
 	}
 
 	xRight.RightSibling = yRight
-	yRight.LeftMostSibling = n.LeftMostSibling
-	yRight.Parent = xRight.Parent
 
 	for yRight.RightSibling != nil {
-		yRight = yRight.RightSibling
 		yRight.LeftMostSibling = xRight.LeftMostSibling
 		yRight.Parent = n.Parent
+		yRight = yRight.RightSibling
 	}
-	return n
 }
 
-func (n *Node) adoptChildren(y *Node) *Node {
+func (n *Node) adoptChildren(y *Node) {
 	if n.LeftMostChild != nil {
 		n.LeftMostChild.makeSiblings(y)
 	} else {
@@ -61,14 +58,17 @@ func (n *Node) adoptChildren(y *Node) *Node {
 			ysib = ysib.RightSibling
 		}
 	}
-	return n
 }
 
-func makeFamily(nodeType, lexeme string, op *Lex.Token, kids ...*Node) *Node {
+func (n *Node) makeFamily(kids ...*Node) {
 	if len(kids) > 1 {
-		return makeNode(nodeType, lexeme, op).adoptChildren(kids[0].makeSiblings(kids[1:]...))
+		kids[0].makeSiblings(kids[1:]...)
+		n.adoptChildren(kids[0])
+		n.Token = n.LeftMostChild.Token
+		return
 	}
-	return makeNode(nodeType, lexeme, op).adoptChildren(kids[0])
+	n.adoptChildren(kids[0])
+	n.Token = n.LeftMostChild.Token
 }
 
 func (n *Node) set(token *Lex.Token) {
@@ -146,4 +146,18 @@ func (n *Node) GetFuncVars() ([]string, []string, error) {
 	}
 
 	return names, types, nil
+}
+
+func (n *Node) PrintChildren() string {
+	toPrint := ""
+	child := n.LeftMostChild
+	for child != nil {
+		if child.Type == "EPSILON" || child.Token == nil {
+			toPrint += fmt.Sprintf("child : %s, ", child.Type)
+		} else {
+			toPrint += fmt.Sprintf("child : %s, ", child.Token.Lit)
+		}
+		child = child.RightSibling
+	}
+	return toPrint
 }

@@ -1,5 +1,9 @@
-class Utility : Other { 
-float who[10][2];
-int member1;};
+class Utility : More{
+ float who[2][3];
+ int member1;};
+int Utility::findMax(){
+};
+float randomize(){
+};
 program {
 };
