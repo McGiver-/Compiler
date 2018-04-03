@@ -15,7 +15,7 @@
    Decl              -> Type @Type @2:2 id @id 
    ClassVarDeclTail  -> @VarDecl @DimList ArraySizeTail @4:3 @2:1 ; ClassVarDecl 
                       | FuncDecl 
-   FuncVarDecl       -> StatementNoAssign StatementTail 
+   FuncVarDecl       -> StatementNoAssign @Stat @2:2 @2:1 StatementTail 
                       | Type @Type @2:2 FuncVarDeclTail 
                       | EPSILON 
    FuncVarDeclTail   -> id @id @DimList ArraySizeTail @VarDecl @4:4 @2:1 ; FuncVarDecl 
@@ -43,48 +43,48 @@
                       | EPSILON 
    AssignStat        -> Variable AssignStatTail 
    AssignStatTail    -> AssignOp Expr 
-   Statement         -> AssignStat ; | StatementNoAssign 
+   Statement         -> AssignStat ; | StatementNoAssign @Stat @2:2 @2:1
    StatementTail     -> Statement StatementTail 
                       | EPSILON 
-   StatementNoAssign -> for ( Decl AssignOp Expr ; RelExpr ; AssignStat ) StatBlock ; 
-                      | if ( Expr ) then StatBlock else StatBlock ; 
-                      | get ( Variable ) ; 
-                      | put ( Expr ) ; 
-                      | return ( Expr ) ; 
+   StatementNoAssign -> for @forStat ( Decl AssignOp Expr ; RelExpr ; AssignStat ) StatBlock ; 
+                      | if @ifStat ( Expr ) then StatBlock else StatBlock ; 
+                      | get @getStat ( Variable ) ; 
+                      | put @putStat ( @Expr Expr ) @2:1 ; 
+                      | return @returnStat ( @Expr Expr ) @2:1 ; 
    StatBlock         -> { StatementTail } | Statement 
                       | EPSILON 
-   Expr              -> ArithExpr RelExprTail 
-   RelExpr           -> ArithExpr RelOp @RelOp @2:2 ArithExpr @RelExpr
-   RelExprTail       -> RelOp @RelOp ArithExpr @RelExpr | EPSILON 
-   ArithExpr         -> Term @Term @2:2 ArithExprTail 
-   ArithExprTail     -> AddOp @AddOp @2:2 Term @Term @3:2 @ArithExpr @2:2 ArithExprTail 
+   Expr              -> @ArithExpr ArithExpr RelExprTail 
+   RelExpr           -> @RelExpr @ArithExpr ArithExpr @RelOp RelOp @ArithExpr ArithExpr @3:2 @2:1
+   RelExprTail       -> @RelOp RelOp @ArithExpr ArithExpr @3:2 | EPSILON 
+   ArithExpr         -> @Term Term @2:1 ArithExprTail 
+   ArithExprTail     -> @AddOp AddOp @Term Term @3:2 @ArithExpr @2:2 ArithExprTail 
                       | EPSILON 
-   Term              -> Factor TermTail 
-   TermTail          -> MultOp Factor @MultOp @3:2 TermTail 
+   Term              -> @Factor Factor @2:1 TermTail 
+   TermTail          -> @Multop MultOp @Factor Factor @3:2 TermTail 
                       | EPSILON 
-   Factor            -> ( ArithExpr @Factor @2:2 ) | not @not Factor @2:1 @Factor @2:2  | EvalExprHead 
-                      | Num @Num @Factor @2:2 | Sign @Sign @2:2 Factor @2:1 @2:2
+   Factor            -> ( @ArithExpr ArithExpr @2:1 ) | not @not @2:1 @Factor Factor | EvalExprHead @2:1
+                      | Num @Num @2:1 | @Sign Sign @Factor Factor
    Num               -> floatNum @floatNum | intNum @intNum
-   Sign              -> + @+ | - @-
+   Sign              -> + @+ @2:1 | - @- @2:1
    EvalExprHead      -> id @id EvalExprTail 
-   EvalExprTail      -> FunctionCallExpr @Fcall @3:3 | EvalIndiceTail 
+   EvalExprTail      -> @FCall FunctionCallExpr | EvalIndiceTail 
    EvalIndiceHead    -> Indice EvalIndiceTail 
    EvalIndiceTail    -> EvalNestHead | EvalIndiceHead 
                       | EPSILON 
    EvalNestHead      -> . EvalExprHead 
    
-   FunctionCallExpr  -> ( @AParams AParams ) 
-   Indice            -> [ ArithExpr @ArithExpr @2:2 @2:1 ] 
+   FunctionCallExpr  -> ( @AParams AParams @3:2 ) 
+   Indice            -> [ @ArithExpr ArithExpr @2:1 @2:1 ] 
    ArraySize         -> [ intNum @DimList] 
    ArraySizeTail     -> ArraySize ArraySizeTail 
                       | EPSILON 
    Type              -> float @float| id @id | int @int
-   AParams           -> Expr @Expr @3:3 @2:1 AParamsTail | EPSILON 
+   AParams           -> Expr @2:1 AParamsTail | EPSILON 
    AParamsTail       -> , AParams | EPSILON 
    AssignOp          -> = 
-   RelOp             -> eq @eq | geq @geq | gt @gt | leq @leq | lt @lt | neq @neq
-   AddOp             -> + @+ | - @- | or @or
-   MultOp            -> * @* | / @/ | and @and 
+   RelOp             -> eq @eq @2:1 | geq @geq @2:1 | gt @gt @2:1 | leq @leq @2:1 | lt @lt @2:1 | neq @neq @2:1
+   AddOp             -> + @+ @2:1 | - @- @2:1 | or @or @2:1
+   MultOp            -> * @* @2:1 | / @/ @2:1 | and @and @2:1 
 
   /*-----------------------------------------------------------------------------------------------------------*/
   /*                                            FIRST AND FOLLOW SETS                                          */
