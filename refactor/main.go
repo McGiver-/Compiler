@@ -1,23 +1,27 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
-
-	"github.com/davecgh/go-spew/spew"
 
 	"github.com/McGiver-/Compiler/refactor/Lex"
 	"github.com/McGiver-/Compiler/refactor/Syn"
 	graph "github.com/awalterschulze/gographviz"
 )
 
+var suffix = 1
+
 func main() {
-	inputFile := os.Args[1]
-	r, err := os.Open(inputFile)
+	src := flag.String("source", "tester", "source file to be compiled")
+	outputGraph := flag.String("graph", "graph.dot", "output of the graph made with graphiz")
+	flag.Parse()
+	r, err := os.Open(*src)
 	if err != nil {
 		log.Fatal("could not open file")
 	}
+	defer r.Close()
 	lexer, err := Lex.CreateLexer(r)
 	if err != nil {
 		log.Fatal(err)
@@ -32,32 +36,79 @@ func main() {
 	}
 
 	ec, rootNode := analyzer.Parse()
-	fmt.Printf("%s", spew.Sdump(rootNode))
+	nodeList := getNodes(rootNode)
+	strip(nodeList)
+	// fmt.Printf("%s", spew.Sdump(rootNode))
 	errs = append(errs, ec...)
 	for _, err := range errs {
 		fmt.Printf("%v\n", err)
 	}
-	// g := graph.NewGraph()
-	// if err := g.SetName("ast"); err != nil {
-	// 	panic(err)
-	// }
-	// if err := g.SetDir(true); err != nil {
-	// 	panic(err)
-	// }
+	dotFile, err := os.Create(*outputGraph)
+	if err != nil {
+		log.Fatal("could not open file")
+	}
+	g := graph.NewGraph()
+	if err := g.SetName("ast"); err != nil {
+		panic(err)
+	}
+	if err := g.SetDir(true); err != nil {
+		panic(err)
+	}
 
-	// g.AddNode("ast", rootNode.Token.Lit, nil)
-	// makeGraph(rootNode, g)
-	// fmt.Print(g.String())
+	rootNodeName := fmt.Sprintf("%s_%d", rootNode.Type, suffix)
+	g.AddNode("ast", rootNodeName, nil)
+	suffix++
+	makeGraph(rootNode, g, rootNodeName)
+	fmt.Fprint(dotFile, g.String())
+	dotFile.Close()
+	// err = exec.Command("dot", "Tpng graph.dot > astGraph.png").Run()
+	// if err != nil {
+	// 	log.Fatalf("could not exec dot commant : %v", err)
+	// }
 }
 
-func makeGraph(n *Syn.Node, g *graph.Graph) {
+func makeGraph(n *Syn.Node, g *graph.Graph, pName string) {
 	if n.LeftMostChild == nil {
 		return
 	}
 	child := n.LeftMostChild
 	for child != nil {
-		g.AddNode("ast", child.Token.Lit, nil)
-		g.AddEdge(n.Token.Lit, child.Token.Lit, true, nil)
-		makeGraph(child, g)
+		name := fmt.Sprintf("%s_%d", child.Type, suffix)
+		if name == fmt.Sprintf("+_%d", suffix) {
+			name = fmt.Sprintf("plus_%d", suffix)
+		}
+		if name == fmt.Sprintf("-_%d", suffix) {
+			name = fmt.Sprintf("minus%d", suffix)
+		}
+		g.AddNode("ast", name, nil)
+		suffix++
+		g.AddEdge(pName, name, true, nil)
+		makeGraph(child, g, name)
+		child = child.RightSibling
+	}
+}
+
+func getNodes(n *Syn.Node) []*Syn.Node {
+	if n == nil {
+		return []*Syn.Node{}
+	}
+	nodeList := []*Syn.Node{}
+	child := n.LeftMostChild
+	for child != nil {
+		nodeList = append(nodeList, child)
+		nodeList = append(nodeList, getNodes(child)...)
+		child = child.RightSibling
+	}
+	return nodeList
+}
+
+func strip(nodeList []*Syn.Node) {
+	for i := 0; i < len(nodeList); i++ {
+		if nodeList[i] != nil && nodeList[i].RightSibling != nil && nodeList[i].RightSibling.Type == "EPSILON" {
+			nodeList[i].RightSibling = nil
+		}
+		if nodeList[i] != nil && nodeList[i].LeftMostChild != nil && nodeList[i].LeftMostChild.Type == "EPSILON" {
+			nodeList[i].LeftMostChild = nil
+		}
 	}
 }

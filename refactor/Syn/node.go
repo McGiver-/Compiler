@@ -155,7 +155,7 @@ func (n *Node) PrintChildren() string {
 		if child.Type == "EPSILON" || child.Token == nil {
 			toPrint += fmt.Sprintf("child : %s, ", child.Type)
 		} else {
-			toPrint += fmt.Sprintf("child : %s, ", child.Token.Lit)
+			toPrint += fmt.Sprintf("child : %s, ", child.Type)
 		}
 		child = child.RightSibling
 	}

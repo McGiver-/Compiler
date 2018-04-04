@@ -53,28 +53,28 @@
                       | return @returnStat ( @Expr Expr ) @2:1 ; 
    StatBlock         -> { StatementTail } | Statement 
                       | EPSILON 
-   Expr              -> @ArithExpr ArithExpr RelExprTail 
+   Expr              -> @ArithExpr ArithExpr @2:1 RelExprTail
    RelExpr           -> @RelExpr @ArithExpr ArithExpr @RelOp RelOp @ArithExpr ArithExpr @3:2 @2:1
    RelExprTail       -> @RelOp RelOp @ArithExpr ArithExpr @3:2 | EPSILON 
-   ArithExpr         -> @Term Term @2:1 ArithExprTail 
-   ArithExprTail     -> @AddOp AddOp @Term Term @3:2 @ArithExpr @2:2 ArithExprTail 
-                      | EPSILON 
+   ArithExpr         -> @Term Term ArithExprTail 
+   ArithExprTail     -> @AddOp AddOp @ArithExpr @Term Term @2:1 @3:2 ArithExprTail 
+                      | EPSILON @EPSILON @2:1 
    Term              -> @Factor Factor @2:1 TermTail 
    TermTail          -> @Multop MultOp @Factor Factor @3:2 TermTail 
                       | EPSILON 
-   Factor            -> ( @ArithExpr ArithExpr @2:1 ) | not @not @2:1 @Factor Factor | EvalExprHead @2:1
+   Factor            -> ( @ArithExpr ArithExpr @2:1 ) | not @not @2:1 @Factor Factor | @Var EvalExprHead
                       | Num @Num @2:1 | @Sign Sign @Factor Factor
-   Num               -> floatNum @floatNum | intNum @intNum
+   Num               -> floatNum @floatNum @2:1 | intNum @intNum
    Sign              -> + @+ @2:1 | - @- @2:1
    EvalExprHead      -> id @id EvalExprTail 
-   EvalExprTail      -> @FCall FunctionCallExpr | EvalIndiceTail 
-   EvalIndiceHead    -> Indice EvalIndiceTail 
-   EvalIndiceTail    -> EvalNestHead | EvalIndiceHead 
+   EvalExprTail      -> @FCall FunctionCallExpr | @IndexList EvalIndiceTail @3:1
+   EvalIndiceHead    -> Indice @2:1 EvalIndiceTail 
+   EvalIndiceTail    -> @3:1 EvalNestHead | EvalIndiceHead 
                       | EPSILON 
    EvalNestHead      -> . EvalExprHead 
    
    FunctionCallExpr  -> ( @AParams AParams @3:2 ) 
-   Indice            -> [ @ArithExpr ArithExpr @2:1 @2:1 ] 
+   Indice            -> [ @ArithExpr ArithExpr @2:1 ] 
    ArraySize         -> [ intNum @DimList] 
    ArraySizeTail     -> ArraySize ArraySizeTail 
                       | EPSILON 

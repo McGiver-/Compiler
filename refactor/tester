@@ -1,5 +1,5 @@
-int Utility::findMin(){
- return (2 + 3);
+float randomize(){
+    return (some);
 };
 program {
 };
