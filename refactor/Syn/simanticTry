@@ -3,7 +3,7 @@
   /*-----------------------------------------------------------------------------------------------------------*/
   
 
-   Prog              -> @Prog @ClassList ClassDecl @FuncDefList FuncDef ProgBody @3:1
+   Prog              -> @Prog @ClassList ClassDecl @FuncDefList FuncDef ProgBody @4:1
    Prog              -> ProgBody @ProgBody @4:4 | FuncDef Prog | @ClassList ClassDecl Prog 
    ProgBody          -> program FuncBody ;
    FuncDef           -> FuncHead FuncBody @FuncDef @6:6 @2:1 ;
@@ -26,7 +26,6 @@
                       | EPSILON 
    VarNest           -> . Variable
    FParamsTail       -> , FParams | EPSILON 
-   ProgBody          -> program FuncBody ; 
    Inherit           -> : id @id @2:1 InheritList | EPSILON 
    InheritList       -> , id @id @2:1 InheritList | EPSILON 
    FuncDefList       -> Decl FuncDefListTail 
@@ -53,7 +52,7 @@
                       | return @returnStat ( @Expr Expr ) @2:1 ; 
    StatBlock         -> { StatementTail } | Statement 
                       | EPSILON 
-   Expr              -> @ArithExpr ArithExpr @2:1 RelExprTail
+   Expr              -> @ArithExpr ArithExpr @2:1 RelExprTail @2:1
    RelExpr           -> @RelExpr @ArithExpr ArithExpr @RelOp RelOp @ArithExpr ArithExpr @3:2 @2:1
    RelExprTail       -> @RelOp RelOp @ArithExpr ArithExpr @3:2 | EPSILON 
    ArithExpr         -> @Term Term ArithExprTail 
@@ -62,16 +61,16 @@
    Term              -> @Factor Factor @2:1 TermTail 
    TermTail          -> @Multop MultOp @Factor Factor @3:2 TermTail 
                       | EPSILON 
-   Factor            -> ( @ArithExpr ArithExpr @2:1 ) | not @not @2:1 @Factor Factor | @Var EvalExprHead
-                      | Num @Num @2:1 | @Sign Sign @Factor Factor
+   Factor            -> ( @ArithExpr ArithExpr @2:1 ) | not @not @2:1 @Factor Factor @2:1 @2:1 | @Var EvalExprHead @2:1
+                      | Num @Num @2:1 | @Sign Sign @Factor Factor @2:1 @2:1
    Num               -> floatNum @floatNum @2:1 | intNum @intNum
    Sign              -> + @+ @2:1 | - @- @2:1
    EvalExprHead      -> id @id EvalExprTail 
-   EvalExprTail      -> @FCall FunctionCallExpr | @IndexList EvalIndiceTail @3:1
+   EvalExprTail      -> @FCall FunctionCallExpr | @DataMember @IndexList EvalIndiceTail @3:2 @2:1
    EvalIndiceHead    -> Indice @2:1 EvalIndiceTail 
    EvalIndiceTail    -> @3:1 EvalNestHead | EvalIndiceHead 
                       | EPSILON 
-   EvalNestHead      -> . EvalExprHead 
+   EvalNestHead      -> @3:2 @2:1 . EvalExprHead @EPSILON @EPSILON @EPSILON
    
    FunctionCallExpr  -> ( @AParams AParams @3:2 ) 
    Indice            -> [ @ArithExpr ArithExpr @2:1 ] 
