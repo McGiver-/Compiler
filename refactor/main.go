@@ -80,6 +80,9 @@ func makeGraph(n *Syn.Node, g *graph.Graph, pName string) {
 		if name == fmt.Sprintf("-_%d", suffix) {
 			name = fmt.Sprintf("minus%d", suffix)
 		}
+		if name == fmt.Sprintf("==_%d", suffix) {
+			name = fmt.Sprintf("eq%d", suffix)
+		}
 		g.AddNode("ast", name, nil)
 		suffix++
 		g.AddEdge(pName, name, true, nil)

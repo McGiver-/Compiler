@@ -1,6 +1,5 @@
 float randomize(){
-    return (some.more(3,3,some[3+4][3]));
-    put (some(3));
+    put (some);
 };
 program {
 };

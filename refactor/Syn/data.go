@@ -143,7 +143,7 @@ var attributeGrammar = [93]string{
 	"Statement",
 	"@ArithExpr ArithExpr @2:1 RelExprTail @2:1",
 	"@RelExpr @ArithExpr ArithExpr @Relop RelOp @ArithExpr ArithExpr @3:2 @2:1",
-	"@RelOp RelOp @ArithExpr ArithExpr @3:2",
+	"@Expr @2:2 @RelOp RelOp @ArithExpr ArithExpr @2:1 @Expr @2:2 @3:2 @RelExpr @2:2",
 	"EPSILON",
 	"@Term Term ArithExprTail",
 	"@AddOp AddOp @ArithExpr @Term Term @2:1 @3:2 ArithExprTail",
