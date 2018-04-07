@@ -115,6 +115,7 @@ func handleSemanticAction(action string, token *Lex.Token, stack *stackgo.Stack)
 		return
 	}
 
+	fmt.Printf("action : %s\n", action)
 	options := strings.Split(action, ":")
 	if len(options) == 1 {
 		lexeme := action
@@ -130,7 +131,7 @@ func handleSemanticAction(action string, token *Lex.Token, stack *stackgo.Stack)
 
 	var nodes []*Node
 	for i := 0; i < popN; i++ {
-		fmt.Printf("node poped is %s\n ", stack.Top().(*Node).Type)
+		fmt.Printf(" node poped is %s\n", stack.Top().(*Node).Type)
 		nodes = append([]*Node{stack.Pop().(*Node)}, nodes...)
 	}
 
@@ -138,7 +139,7 @@ func handleSemanticAction(action string, token *Lex.Token, stack *stackgo.Stack)
 	subnodes := append(nodes[:parentPos-1], nodes[parentPos:]...)
 
 	parentNode.makeFamily(subnodes...)
-	fmt.Printf("made %s : %s\n", parentNode.Type, parentNode.PrintChildren())
+	fmt.Printf("\tmade %s : %s\n", parentNode.Type, parentNode.PrintChildren())
 	stack.Push(parentNode)
 }
 

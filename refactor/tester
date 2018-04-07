@@ -1,5 +1,5 @@
 float randomize(){
-    put (some);
+    some[3][3+4][inside[23]].another[some[3+3]] = 4;
 };
 program {
 };

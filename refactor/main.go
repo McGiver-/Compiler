@@ -37,6 +37,7 @@ func main() {
 
 	ec, rootNode := analyzer.Parse()
 	nodeList := getNodes(rootNode)
+	replaceLeading(nodeList)
 	strip(nodeList)
 	// fmt.Printf("%s", spew.Sdump(rootNode))
 	errs = append(errs, ec...)
@@ -112,6 +113,17 @@ func strip(nodeList []*Syn.Node) {
 		}
 		if nodeList[i] != nil && nodeList[i].LeftMostChild != nil && nodeList[i].LeftMostChild.Type == "EPSILON" {
 			nodeList[i].LeftMostChild = nil
+		}
+	}
+}
+
+func replaceLeading(nodeList []*Syn.Node) {
+	for i := 0; i < len(nodeList); i++ {
+		if nodeList[i] != nil &&
+			nodeList[i].LeftMostChild != nil &&
+			nodeList[i].LeftMostChild.Type == "EPSILON" &&
+			nodeList[i].LeftMostChild.RightSibling != nil {
+			nodeList[i].LeftMostChild = nodeList[i].LeftMostChild.RightSibling
 		}
 	}
 }

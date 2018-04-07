@@ -2,30 +2,23 @@
  
  
  
- 
- 
- 
- 
- 
-   Expr              -> @ArithExpr ArithExpr @2:1 RelExprTail @2:1
-   RelExpr           -> @RelExpr @ArithExpr ArithExpr @RelOp RelOp @ArithExpr ArithExpr @3:2 @2:1
-   RelExprTail       -> @Expr @2:2 @RelOp RelOp @ArithExpr ArithExpr @2:1 @Expr @2:2 @3:2 @RelExpr @2:2 | EPSILON 
-   ArithExpr         -> @Term Term ArithExprTail 
-   ArithExprTail     -> @AddOp AddOp @ArithExpr @Term Term @2:1 @3:2 ArithExprTail 
-                      | EPSILON @EPSILON @2:1 
-
-   FuncDef           -> FuncHead FuncBody @FuncDef @6:6 @2:1 ;
    FuncBody          -> { @StatBlock FuncVarDecl }
    FuncVarDecl       -> StatementNoAssign @Stat @2:2 @2:1 StatementTail 
-   StatementNoAssign -> for @forStat ( Decl AssignOp Expr ; RelExpr ; AssignStat ) StatBlock ; 
-                      | put @putStat ( @Expr Expr ) @2:1 ; 
- 
-   EvalExprHead      -> id @id EvalExprTail
+                      | Type @Type @2:2 FuncVarDeclTail 
+                      | EPSILON 
+   FuncVarDeclTail   -> id @id @DimList ArraySizeTail @VarDecl @4:4 @2:1 ; FuncVarDecl 
+                      | @EPSILON @2:2 @Var @2:2 @DataMember @id @2:1 @IndexList VariableTail @2:1 @2:1 AssignStatTail @AssignStat @3:3 @Stat @2:2 @2:1; StatementTail    
+   AssignStatTail    -> AssignOp @Expr Expr   
+   Variable          -> @2:1 @2:1 @DataMember id @id @2:1 @IndexList VariableTail 
+   VariableTail      -> VarNest | VarIndiceTail 
+   VarIndiceTail     -> Indice @2:1 VariableTail 
+                      | EPSILON 
+   VarNest           -> . Variable
+
+   EvalExprHead      -> id @id EvalExprTail 
    EvalExprTail      -> @FCall @AParams FunctionCallExpr @3:2 @2:1 | @DataMember @IndexList EvalIndiceTail @3:2 @2:1
    EvalIndiceHead    -> Indice @2:1 EvalIndiceTail 
-   EvalIndiceTail    -> EvalNestHead | EvalIndiceHead 
+   Indice            -> [ @ArithExpr ArithExpr @2:1 ] 
+   EvalIndiceTail    -> @3:1 EvalNestHead | EvalIndiceHead 
                       | EPSILON 
    EvalNestHead      -> @3:2 @2:1 . EvalExprHead @EPSILON @EPSILON @EPSILON
-   FunctionCallExpr  -> ( AParams ) 
-   AParams           -> @Expr Expr @2:1 AParamsTail | EPSILON 
-   AParamsTail       -> , AParams | EPSILON 

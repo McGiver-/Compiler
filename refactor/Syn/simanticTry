@@ -48,7 +48,7 @@
                       | EPSILON 
    StatementNoAssign -> for @forStat ( Decl AssignOp Expr ; RelExpr ; AssignStat ) StatBlock ; 
                       | if @ifStat ( Expr ) then StatBlock else StatBlock ; 
-                      | get @getStat ( Variable ) ; 
+                      | get @getStat ( @Var Variable ) @2:1 ; 
                       | put @putStat ( @Expr Expr ) @2:1 ; 
                       | return @returnStat ( @Expr Expr ) @2:1 ; 
    StatBlock         -> { StatementTail } | Statement 
@@ -62,8 +62,8 @@
    Term              -> @Factor Factor @2:1 TermTail 
    TermTail          -> @Multop MultOp @Factor Factor @3:2 TermTail 
                       | EPSILON 
-   Factor            -> ( @ArithExpr ArithExpr @2:1 ) | not @not @2:1 @Factor Factor | @Var EvalExprHead
-                      | Num @Num @2:1 | @Sign Sign @Factor Factor
+   Factor            -> ( @ArithExpr ArithExpr @2:1 ) | not @not @2:1 @Factor Factor | @Var EvalExprHead @2:1
+                      | Num @Num @2:1 | @Sign Sign @Factor Factor @2:1 @2:1
    Num               -> floatNum @floatNum @2:1 | intNum @intNum
    Sign              -> + @+ @2:1 | - @- @2:1
    EvalExprHead      -> id @id EvalExprTail 
