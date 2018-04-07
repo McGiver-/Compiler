@@ -1,5 +1,7 @@
 float randomize(){
-    some[3][3+4][inside[23]].another[some[3+3]] = 4;
+    if(array[idx] == maxValue) then {
+ maxValue = array[idx];}
+ else{}; 
 };
 program {
 };

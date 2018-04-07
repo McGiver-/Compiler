@@ -1,6 +1,14 @@
  
  
+
+
+   AssignStat        -> Variable AssignStatTail 
+   AssignStatTail    -> AssignOp Expr 
  
+   StatementNoAssign -> for @forStat ( Decl AssignOp Expr ; RelExpr ; AssignStat ) StatBlock ; 
+                      | if @ifStat ( Expr ) then StatBlock else StatBlock ; 
+                      | get @getStat ( @Var Variable ) @2:1 @2:1 @2:1 ; 
+                      | put @putStat ( @Expr Expr ) @2:1 ; 
  
    FuncBody          -> { @StatBlock FuncVarDecl }
    FuncVarDecl       -> StatementNoAssign @Stat @2:2 @2:1 StatementTail 
@@ -9,8 +17,8 @@
    FuncVarDeclTail   -> id @id @DimList ArraySizeTail @VarDecl @4:4 @2:1 ; FuncVarDecl 
                       | @EPSILON @2:2 @Var @2:2 @DataMember @id @2:1 @IndexList VariableTail @2:1 @2:1 AssignStatTail @AssignStat @3:3 @Stat @2:2 @2:1; StatementTail    
    AssignStatTail    -> AssignOp @Expr Expr   
-   Variable          -> @2:1 @2:1 @DataMember id @id @2:1 @IndexList VariableTail 
-   VariableTail      -> VarNest | VarIndiceTail 
+   Variable          -> @DataMember id @id @2:1 @IndexList VariableTail
+   VariableTail      -> @2:1 @2:1 VarNest | VarIndiceTail 
    VarIndiceTail     -> Indice @2:1 VariableTail 
                       | EPSILON 
    VarNest           -> . Variable
