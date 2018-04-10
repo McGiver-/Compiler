@@ -32,7 +32,7 @@
    FuncDefList       -> Decl FuncDefListTail 
                       | EPSILON
    FuncDefListTail   -> FuncDef FuncDefList 
-   FuncDecl	         -> ( @FparamList FParams ) ; @FuncDecl ClassVarDecl	
+   FuncDecl	         -> ( @FparamList FParams ) ; @FuncDecl @4:4 ClassVarDecl	
    ArraySize         -> [ intNum @intNum @2:1 ] 
    ArraySizeTail     -> ArraySize ArraySizeTail 
                       | EPSILON 

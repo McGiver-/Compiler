@@ -2,26 +2,30 @@
  
 
 
-   AssignStat        -> Variable AssignStatTail 
-   AssignStatTail    -> AssignOp Expr 
  
-   StatementNoAssign -> for @forStat ( Decl AssignOp Expr ; RelExpr ; AssignStat ) StatBlock ; 
-                      | if @ifStat ( Expr ) then StatBlock else StatBlock ; 
-                      | get @getStat ( @Var Variable ) @2:1 @2:1 @2:1 ; 
+   StatementNoAssign -> for @forStat ( Decl AssignOp @Expr Expr ; @Expr Expr RelExpr ; @AssignStat AssignStat ) @StatBlock StatBlock @7:1 ; 
+                      | if @ifStat ( @Expr Expr ) then @StatBlock StatBlock else @StatBlock StatBlock ; 
+                      | get @getStat ( @Var Variable ) @2:1 @2:1 @2:1; 
                       | put @putStat ( @Expr Expr ) @2:1 ; 
  
    FuncBody          -> { @StatBlock FuncVarDecl }
-   FuncVarDecl       -> StatementNoAssign @Stat @2:2 @2:1 StatementTail 
+   FuncVarDecl       -> StatementNoAssign @Stat @2:2 @2:1 StatementTail
                       | Type @Type @2:2 FuncVarDeclTail 
                       | EPSILON 
    FuncVarDeclTail   -> id @id @DimList ArraySizeTail @VarDecl @4:4 @2:1 ; FuncVarDecl 
                       | @EPSILON @2:2 @Var @2:2 @DataMember @id @2:1 @IndexList VariableTail @2:1 @2:1 AssignStatTail @AssignStat @3:3 @Stat @2:2 @2:1; StatementTail    
+   AssignStat        -> @Var Variable @2:1 @2:1 AssignStatTail @3:1 @2:1
    AssignStatTail    -> AssignOp @Expr Expr   
+   Statement         -> @AssignStat AssignStat @Stat @2:2 @2:1 ; | StatementNoAssign @Stat @2:2 @2:1
+   StatementTail     -> Statement StatementTail 
+                      | EPSILON 
    Variable          -> @DataMember id @id @2:1 @IndexList VariableTail
    VariableTail      -> @2:1 @2:1 VarNest | VarIndiceTail 
    VarIndiceTail     -> Indice @2:1 VariableTail 
                       | EPSILON 
    VarNest           -> . Variable
+   RelExpr           -> @RelExpr @Expr Expr @RelOp RelOp @Expr Expr @3:2
+   RelExprTail       -> @Expr @2:2 @RelOp RelOp @ArithExpr ArithExpr @2:1 @Expr @2:2 @3:2 | EPSILON 
 
    EvalExprHead      -> id @id EvalExprTail 
    EvalExprTail      -> @FCall @AParams FunctionCallExpr @3:2 @2:1 | @DataMember @IndexList EvalIndiceTail @3:2 @2:1
