@@ -10,7 +10,7 @@ import (
 	"github.com/McGiver-/Compiler/refactor/Syn"
 	"github.com/McGiver-/Compiler/refactor/Syn/ast"
 	graph "github.com/awalterschulze/gographviz"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/olekukonko/tablewriter"
 )
 
 var suffix = 1
@@ -67,7 +67,32 @@ func main() {
 
 	makeTableVisitor := &ast.TableCreationVisitor{}
 	rootNode.Accept(makeTableVisitor)
-	fmt.Printf("%s", spew.Sdump(rootNode.Table))
+	preorder(rootNode, printTable)
+	// fmt.Printf("%s", spew.Sdump(rootNode.Table))
+}
+
+func printTable(node *ast.Node) {
+	if node.Table == nil {
+		return
+	}
+	tw := tablewriter.NewWriter(os.Stdout)
+	tw.SetHeader([]string{"name", "kind", "type", "link"})
+	tw.SetCaption(true, node.Table.Name)
+	for _, v := range node.Table.Entries {
+		link := "false"
+		if v.Child != nil {
+			link = "true"
+		}
+		tw.Append([]string{v.Name, v.Kind, v.Typ, link})
+	}
+	tw.Render()
+}
+
+func preorder(node *ast.Node, fn func(*ast.Node)) {
+	fn(node)
+	for _, v := range node.GetChildren() {
+		preorder(v, fn)
+	}
 }
 
 func makeGraph(n *ast.Node, g *graph.Graph, pName string) {
