@@ -20,6 +20,8 @@ func (visitor *TableCreationVisitor) visit(node *Node) {
 		node.visitProg()
 	case "ClassDecl":
 		node.visitClassDecl()
+	case "VarDecl":
+		node.visitVarDecl()
 	default:
 		node.visitNone()
 	}
@@ -69,6 +71,19 @@ func (n *Node) visitClassDecl() {
 		n.Table.AddEntry(v.Entry)
 	}
 	n.Entry = Sem.NewEntry(className, "class", list, n.Table)
+}
+
+func (n *Node) visitVarDecl() {
+	list := n.GetChildren()[0].GetChildren()[0].Value + " "
+	dims := n.GetChildren()[2].GetChildren()
+	for i := 0; i < len(dims); i++ {
+		if i == len(dims)-1 {
+			list += fmt.Sprintf("%s", dims[i].Value)
+		} else {
+			list += fmt.Sprintf("%s:", dims[i].Value)
+		}
+	}
+	n.Entry = Sem.NewEntry(n.GetChildren()[1].Token.Lit, "variable", list, nil)
 }
 
 func (n *Node) acceptGeneric(visitor Visitor) {

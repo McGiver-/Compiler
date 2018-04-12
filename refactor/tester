@@ -1,6 +1,8 @@
 class Utility: More, Another {
  float member2(int name,int name);
- int member1;};
+ int member1;
+ float member2[3][3];
+ };
 float randomize(){
 };
 program {
