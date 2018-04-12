@@ -22,6 +22,12 @@ func (visitor *TableCreationVisitor) visit(node *Node) {
 		node.visitClassDecl()
 	case "VarDecl":
 		node.visitVarDecl()
+	case "FuncDecl":
+		node.visitFuncDecl()
+	case "Fparam":
+		node.visitFParam()
+	case "FuncDef":
+		node.visitFuncDef()
 	default:
 		node.visitNone()
 	}
@@ -71,6 +77,40 @@ func (n *Node) visitClassDecl() {
 		n.Table.AddEntry(v.Entry)
 	}
 	n.Entry = Sem.NewEntry(className, "class", list, n.Table)
+}
+
+func (n *Node) visitFuncDef() {
+	n.Table = &Sem.Table{Name: n.GetChildren()[2].Token.Lit}
+	retVal := n.GetChildren()[0].GetChildren()[0].Value
+	for _, fparam := range n.GetChildren()[3].GetChildren() {
+		n.Table.AddEntry(fparam.Entry)
+	}
+	for _, stat := range n.GetChildren()[4].GetChildren() {
+		n.Table.AddEntry(stat.Entry)
+	}
+	n.Entry = Sem.NewEntry(n.Table.Name, "function", retVal, n.Table)
+}
+
+func (n *Node) visitFuncDecl() {
+	n.Table = &Sem.Table{Name: n.GetChildren()[1].Token.Lit}
+	retVal := n.GetChildren()[0].GetChildren()[0].Value
+	for _, fparam := range n.GetChildren()[2].GetChildren() {
+		n.Table.AddEntry(fparam.Entry)
+	}
+	n.Entry = Sem.NewEntry(n.Table.Name, "function", retVal, n.Table)
+}
+
+func (n *Node) visitFParam() {
+	list := n.GetChildren()[0].GetChildren()[0].Value + " "
+	dims := n.GetChildren()[2].GetChildren()
+	for i := 0; i < len(dims); i++ {
+		if i == len(dims)-1 {
+			list += fmt.Sprintf("%s", dims[i].Value)
+		} else {
+			list += fmt.Sprintf("%s:", dims[i].Value)
+		}
+	}
+	n.Entry = Sem.NewEntry(n.GetChildren()[1].Token.Lit, "parameter", list, nil)
 }
 
 func (n *Node) visitVarDecl() {
