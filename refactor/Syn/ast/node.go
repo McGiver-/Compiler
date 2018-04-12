@@ -1,12 +1,15 @@
-package Syn
+package ast
 
 import (
 	"fmt"
 
 	"github.com/McGiver-/Compiler/refactor/Lex"
+	"github.com/McGiver-/Compiler/refactor/Syn/Sem"
 )
 
 type Node struct {
+	Table           *Sem.Table
+	Entry           *Sem.Entry
 	Type            string
 	Value           string
 	Token           *Lex.Token
@@ -14,14 +17,6 @@ type Node struct {
 	LeftMostChild   *Node
 	LeftMostSibling *Node
 	RightSibling    *Node
-}
-
-type noder interface {
-	makeSiblings(noder) noder
-	adoptChildren(noder) noder
-	makeFamily(string, ...noder) noder
-	get()
-	set()
 }
 
 func (n *Node) makeSiblings(y ...*Node) {
@@ -60,7 +55,7 @@ func (n *Node) adoptChildren(y *Node) {
 	}
 }
 
-func (n *Node) makeFamily(kids ...*Node) {
+func (n *Node) MakeFamily(kids ...*Node) {
 	if len(kids) > 1 {
 		kids[0].makeSiblings(kids[1:]...)
 		n.adoptChildren(kids[0])
@@ -71,15 +66,15 @@ func (n *Node) makeFamily(kids ...*Node) {
 	n.Token = n.LeftMostChild.Token
 }
 
-func (n *Node) set(token *Lex.Token) {
+func (n *Node) Set(token *Lex.Token) {
 	n.Token = token
 }
 
-func makeNode(s, lexeme string, t *Lex.Token) *Node {
+func MakeNode(s, lexeme string, t *Lex.Token) *Node {
 	node := &Node{
-		s,
-		lexeme,
-		t, nil, nil, nil, nil,
+		Type:  s,
+		Value: lexeme,
+		Token: t,
 	}
 	node.LeftMostSibling = node
 	return node
@@ -96,58 +91,6 @@ func (n *Node) GetChild(name string) *Node {
 	return &Node{}
 }
 
-func (n *Node) GetChildLink(names ...string) []*Node {
-	var children []*Node
-	child := n.LeftMostChild
-	for child != nil {
-		if match(child.Type, names) {
-			children = append(children, child)
-		}
-		child = child.RightSibling
-	}
-	return children
-}
-
-func match(s string, ss []string) bool {
-	for _, v := range ss {
-		if s == v {
-			return true
-		}
-	}
-	return false
-}
-
-//AsumeFuncDefNode
-func (n *Node) GetFuncVars() ([]string, []string, error) {
-	var names []string
-	var types []string
-	statBlock := n.GetChild("StatBlock")
-	vars := statBlock.GetChildLink("VarDecl")
-
-	if len(vars) == 0 {
-		return nil, nil, fmt.Errorf("could not find vars")
-	}
-
-	for _, variable := range vars {
-		varname := variable.GetChild("id")
-		t := variable.GetChild("Type")
-		_type := t.Token.Lit + " "
-		dimlist := variable.GetChild("DimList")
-		dims := dimlist.GetChildLink("intNum")
-		for _, dim := range dims {
-			_type += dim.Value + " "
-		}
-		types = append(types, _type)
-		names = append(names, varname.Token.Lit)
-	}
-
-	if len(names) == 0 {
-		return nil, nil, fmt.Errorf("could not find vars")
-	}
-
-	return names, types, nil
-}
-
 func (n *Node) PrintChildren() string {
 	toPrint := ""
 	child := n.LeftMostChild
@@ -160,4 +103,14 @@ func (n *Node) PrintChildren() string {
 		child = child.RightSibling
 	}
 	return toPrint
+}
+
+func (n *Node) GetChildren() []*Node {
+	var nodes []*Node
+	child := n.LeftMostChild
+	for child != nil {
+		nodes = append(nodes, child)
+		child = child.RightSibling
+	}
+	return nodes
 }

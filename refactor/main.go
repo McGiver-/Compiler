@@ -8,7 +8,9 @@ import (
 
 	"github.com/McGiver-/Compiler/refactor/Lex"
 	"github.com/McGiver-/Compiler/refactor/Syn"
+	"github.com/McGiver-/Compiler/refactor/Syn/ast"
 	graph "github.com/awalterschulze/gographviz"
+	"github.com/davecgh/go-spew/spew"
 )
 
 var suffix = 1
@@ -62,13 +64,13 @@ func main() {
 	makeGraph(rootNode, g, rootNodeName)
 	fmt.Fprint(dotFile, g.String())
 	dotFile.Close()
-	// err = exec.Command("dot", "Tpng graph.dot > astGraph.png").Run()
-	// if err != nil {
-	// 	log.Fatalf("could not exec dot commant : %v", err)
-	// }
+
+	makeTableVisitor := &ast.TableCreationVisitor{}
+	rootNode.Accept(makeTableVisitor)
+	fmt.Printf("%s", spew.Sdump(rootNode.Table))
 }
 
-func makeGraph(n *Syn.Node, g *graph.Graph, pName string) {
+func makeGraph(n *ast.Node, g *graph.Graph, pName string) {
 	if n.LeftMostChild == nil {
 		return
 	}
@@ -92,11 +94,11 @@ func makeGraph(n *Syn.Node, g *graph.Graph, pName string) {
 	}
 }
 
-func getNodes(n *Syn.Node) []*Syn.Node {
+func getNodes(n *ast.Node) []*ast.Node {
 	if n == nil {
-		return []*Syn.Node{}
+		return []*ast.Node{}
 	}
-	nodeList := []*Syn.Node{}
+	nodeList := []*ast.Node{}
 	child := n.LeftMostChild
 	for child != nil {
 		nodeList = append(nodeList, child)
@@ -106,7 +108,7 @@ func getNodes(n *Syn.Node) []*Syn.Node {
 	return nodeList
 }
 
-func strip(nodeList []*Syn.Node) {
+func strip(nodeList []*ast.Node) {
 	for i := 0; i < len(nodeList); i++ {
 		if nodeList[i] != nil && nodeList[i].RightSibling != nil && nodeList[i].RightSibling.Type == "EPSILON" {
 			nodeList[i].RightSibling = nil
@@ -117,7 +119,7 @@ func strip(nodeList []*Syn.Node) {
 	}
 }
 
-func replaceLeading(nodeList []*Syn.Node) {
+func replaceLeading(nodeList []*ast.Node) {
 	for i := 0; i < len(nodeList); i++ {
 		if nodeList[i] != nil &&
 			nodeList[i].LeftMostChild != nil &&

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/McGiver-/Compiler/refactor/Lex"
+	"github.com/McGiver-/Compiler/refactor/Syn/ast"
 	"github.com/alediaferia/stackgo"
 )
 
@@ -31,7 +32,7 @@ func CreateAnalyzer(tokens []*Lex.Token) (*SynAnalyzer, error) {
 	}, nil
 }
 
-func (syn *SynAnalyzer) Parse() (errorList []error, rootNode *Node) {
+func (syn *SynAnalyzer) Parse() (errorList []error, rootNode *ast.Node) {
 	skipping := false
 	pStack := syn.parsingStack // This is the stack that holds the parsing symbols that are pushed.
 	sStack := syn.semanticStack
@@ -103,43 +104,39 @@ func (syn *SynAnalyzer) Parse() (errorList []error, rootNode *Node) {
 		}
 	}
 	// sStack.Pop()
-	rootNode = sStack.Pop().(*Node)
+	rootNode = sStack.Pop().(*ast.Node)
 	return
 }
 
 func handleSemanticAction(action string, token *Lex.Token, stack *stackgo.Stack) {
 
-	// fmt.Printf("action %s\n", action)
 	if action == "EPSILON" {
-		stack.Push(makeNode("EPSILON", "EPSILON", nil))
+		stack.Push(ast.MakeNode("EPSILON", "EPSILON", nil))
 		return
 	}
 
-	fmt.Printf("action : %s\n", action)
 	options := strings.Split(action, ":")
 	if len(options) == 1 {
 		lexeme := action
 		if token != nil && token.Lit != "" {
 			lexeme = token.Lit
 		}
-		stack.Push(makeNode(action, lexeme, token))
+		stack.Push(ast.MakeNode(action, lexeme, token))
 		return
 	}
 
 	popN, _ := strconv.Atoi(options[0])
 	parentPos, _ := strconv.Atoi(options[1])
 
-	var nodes []*Node
+	var nodes []*ast.Node
 	for i := 0; i < popN; i++ {
-		fmt.Printf(" node poped is %s\n", stack.Top().(*Node).Type)
-		nodes = append([]*Node{stack.Pop().(*Node)}, nodes...)
+		nodes = append([]*ast.Node{stack.Pop().(*ast.Node)}, nodes...)
 	}
 
 	parentNode := nodes[parentPos-1]
 	subnodes := append(nodes[:parentPos-1], nodes[parentPos:]...)
 
-	parentNode.makeFamily(subnodes...)
-	fmt.Printf("\tmade %s : %s\n", parentNode.Type, parentNode.PrintChildren())
+	parentNode.MakeFamily(subnodes...)
 	stack.Push(parentNode)
 }
 

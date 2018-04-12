@@ -1,8 +1,7 @@
-
- program{
-      for( int idx = 1; idx == 99; idx = idx + 1) {
- if(array[idx] == maxValue + 1) then {
- maxValue = array[idx];}
- else{};
- }; 
- };
+class Utility: More, Another {
+ float member2(int name,int name);
+ int member1;};
+float randomize(){
+};
+program {
+};
