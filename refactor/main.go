@@ -8,6 +8,7 @@ import (
 
 	"github.com/McGiver-/Compiler/refactor/Lex"
 	"github.com/McGiver-/Compiler/refactor/Syn"
+	"github.com/McGiver-/Compiler/refactor/Syn/Sem"
 	"github.com/McGiver-/Compiler/refactor/Syn/ast"
 	graph "github.com/awalterschulze/gographviz"
 	"github.com/olekukonko/tablewriter"
@@ -43,9 +44,6 @@ func main() {
 	strip(nodeList)
 	// fmt.Printf("%s", spew.Sdump(rootNode))
 	errs = append(errs, ec...)
-	for _, err := range errs {
-		fmt.Printf("%v\n", err)
-	}
 	dotFile, err := os.Create(*outputGraph)
 	if err != nil {
 		log.Fatal("could not open file")
@@ -66,19 +64,26 @@ func main() {
 	dotFile.Close()
 
 	makeTableVisitor := &ast.TableCreationVisitor{}
-	rootNode.Accept(makeTableVisitor)
-	preorder(rootNode, printTable)
+	errs = append(errs, rootNode.Accept(makeTableVisitor)...)
+	errs = append(errs, rootNode.Table.GetShadows()...)
+	for _, err := range errs {
+		fmt.Printf("%v\n", err)
+	}
+	preorder(rootNode.Table, printTable)
 	// fmt.Printf("%s", spew.Sdump(rootNode.Table))
 }
 
-func printTable(node *ast.Node) {
-	if node.Table == nil {
+func printTable(table *Sem.Table) {
+	if table == nil {
 		return
 	}
 	tw := tablewriter.NewWriter(os.Stdout)
 	tw.SetHeader([]string{"name", "kind", "type", "link"})
-	tw.SetCaption(true, node.Table.Name)
-	for _, v := range node.Table.Entries {
+	tw.SetCaption(true, table.Name)
+	for _, v := range table.Entries {
+		if v == nil {
+			continue
+		}
 		link := "false"
 		if v.Child != nil {
 			link = "true"
@@ -88,10 +93,16 @@ func printTable(node *ast.Node) {
 	tw.Render()
 }
 
-func preorder(node *ast.Node, fn func(*ast.Node)) {
-	fn(node)
-	for _, v := range node.GetChildren() {
-		preorder(v, fn)
+func preorder(table *Sem.Table, fn func(*Sem.Table)) {
+	fn(table)
+	if table == nil {
+		return
+	}
+	for _, v := range table.Entries {
+		if v == nil {
+			continue
+		}
+		preorder(v.Child, fn)
 	}
 }
 

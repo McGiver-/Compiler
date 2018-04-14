@@ -1,14 +1,15 @@
 class Utility: More, Another {
+ float randomize();
+ int you[3][34];
  float member2(int mine);
  int member1;
  };
-class More {
- int me;
- };
-float randomize(){
-};
-float Utility::randomize(int array[1],float me){
-    int you;
-};
-program {
+float Utility::randomize(){
+    int you[3][34];
+    int member1;
+}; 
+ program {
+    for(int t = 0; t<=100 ; t = t + 1) {
+        int member1;
+ }; 
 };
