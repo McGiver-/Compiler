@@ -1,0 +1,77 @@
+/*
+    this tests:
+            1.1
+            1.2
+            1.3
+            1.1.1
+            1.1.2
+            2.2.1
+            2.2.2
+            2.3.1
+            3.1.1
+            3.1.2
+            3.1.3
+            3.1.4
+            3.1.5
+            3.1.7 
+            3.1.8 
+            3.1.9
+            3.1.10
+            3.1.11
+            3.2.1
+            3.2.2
+            3.2.3
+            4.3.2
+            5.1.1
+            5.1.2
+            5.1.3
+            5.1.4
+            5.1.5
+*/
+
+/* 1.1.2
+    here is another comment 
+*/ 
+class Utility { // 1.1.2 1.3.5
+    float randomize(float some,int another);
+    $ % # 
+    int useful;
+    int multi[3][4];
+    float hello;
+    float hello;
+    Utility utils[3][4]; // 3.3.1
+    Utility funcDef(int one, float two[3], Utility three);
+ };
+
+float freeFunc(float free){ // 3.1.3
+    return (1.2); // 3.1.9
+};
+
+float Utility::randomize(float some,int another){ // 3.1.4
+     multi[3][4] = another[3+3+multi[3][useful]].come(1.2); // 1.1.1 3.1.10 3.1.11
+
+    for( int idx = 1; idx == 99; idx = idx + 21) { 3.1.8
+        if(array[idx] == maxValue + 1 ) then { // 3.1.7 
+             if(array[idx] == maxValue + 1 ) then {
+                 maxValue = array[idx];
+            }else{
+            };
+        }else{
+        };
+     }; 
+
+     return (randomize(4));
+}; 
+ program { // 3.1.2
+     sem[3][you] = antother[3+3+some[r]].come(1.2);
+
+    for( int idx = 1; idx == 99; idx = idx + 21) {
+        if(array[idx] == maxValue + 1 ) then {
+             if(array[idx] == maxValue + 1 ) then {
+                 maxValue = array[idx];
+            }else{
+            };
+        }else{
+        };
+     };
+};
