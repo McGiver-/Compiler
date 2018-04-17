@@ -43,6 +43,32 @@ func (t *Table) GetShadows() (errors []error) {
 	return errors
 }
 
+func (t *Table) CheckMemberFuncNoDef() (errors []error) {
+	classTables := []*Table{}
+	for _, entry := range t.Entries {
+		if entry.Kind == "class" {
+			classTables = append(classTables, entry.Child)
+		}
+	}
+
+	for _, classTable := range classTables {
+		for _, entry := range classTable.Entries {
+			if entry.Kind == "function" {
+				hasVars := false
+				for _, e := range entry.Child.Entries {
+					if e.Kind == "variable" {
+						hasVars = true
+					}
+				}
+				if !hasVars {
+					errors = append(errors, fmt.Errorf("<%s> member function has no definition", entry.Name))
+				}
+			}
+		}
+	}
+	return errors
+}
+
 func (t *Table) IsShadowing(entry *Entry) bool {
 	if t == nil {
 		return false
@@ -66,4 +92,38 @@ func (t *Table) MergeTable(t2 *Table) {
 	for _, v := range t2.Entries {
 		t.AddEntry(v)
 	}
+}
+
+func (t *Table) FindTable(name string) *Table {
+	if t == nil {
+		return nil
+	}
+	table := t
+	for _, v := range table.Entries {
+		if v.Name == name {
+			return v.Child
+		}
+		f := v.Child.FindTable(name)
+		if f != nil {
+			return f
+		}
+	}
+	return nil
+}
+
+func (t *Table) FindEntry(name string) *Entry {
+	if t == nil {
+		return nil
+	}
+	table := t
+	for _, v := range table.Entries {
+		if v.Name == name {
+			return v
+		}
+		f := v.Child.FindEntry(name)
+		if f != nil {
+			return f
+		}
+	}
+	return nil
 }

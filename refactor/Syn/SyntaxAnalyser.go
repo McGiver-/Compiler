@@ -62,7 +62,7 @@ func (syn *SynAnalyzer) Parse() (errorList []error, rootNode *ast.Node) {
 				token, _ = syn.nextToken()
 			} else {
 				skipping = true
-				errorList = append(errorList, fmt.Errorf("Expected %s at %s", symbol, token.Position))
+				errorList = append(errorList, fmt.Errorf("%s Expected %s", token.Position, symbol))
 				token, err := syn.nextToken() // take the next token
 				if err != nil {
 					return
@@ -77,7 +77,7 @@ func (syn *SynAnalyzer) Parse() (errorList []error, rootNode *ast.Node) {
 		} else { // If the symbol was not a terminal i.e nonterminal
 			rhsList, err := syn.getProduction(symbol, token.Token.String())
 			if err != nil {
-				err = fmt.Errorf("error %v at %s token %s lexeme %s symbol %s", err, token.Position, token.Token.String(), token.Lit, symbol)
+				err = fmt.Errorf("%s error %v token %s lexeme %s symbol %s", token.Position, err, token.Token.String(), token.Lit, symbol)
 				errorList = append(errorList, err)
 				skipping = true
 				token, err := syn.nextToken()

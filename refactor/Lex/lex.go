@@ -61,8 +61,7 @@ func (l *Lexer) GetTokensNoChan() (tks []*Token, ers []error) {
 		pos, tok, lit := l.Scan()
 		switch tok {
 		case token.ILLEGAL:
-			fmt.Printf("illegal lit is %s\n", lit)
-			ers = append(ers, fmt.Errorf("%s\t%s\tis not an accepted character", l.fset.Position(pos), lit))
+			ers = append(ers, fmt.Errorf("%s <%s> is not an accepted character", l.fset.Position(pos), lit))
 		case token.EOF:
 			break
 		default:
